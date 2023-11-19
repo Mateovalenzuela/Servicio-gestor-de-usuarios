@@ -11,7 +11,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     # Añadir atributos 'required' para campos específicos
     username = serializers.CharField(required=True)
     # Puedes manejar la contraseña de una manera segura utilizando un campo de contraseña
-    password = serializers.CharField(required=True, write_only=True)
+    password = serializers.CharField(required=True)
     email = serializers.CharField(required=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)

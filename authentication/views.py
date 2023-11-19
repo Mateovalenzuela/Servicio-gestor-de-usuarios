@@ -1,14 +1,22 @@
+import datetime
+from django.contrib.auth import get_user_model
+from django.urls.base import reverse
+from django.contrib.sessions.models import Session
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND,
-                                   HTTP_500_INTERNAL_SERVER_ERROR)
-from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from .serializers import UsuarioSerializer
 
 
 # Create your views here.
 
 class ListarUsuario(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = []
 
     def get(self, request):
         try:
@@ -19,14 +27,17 @@ class ListarUsuario(APIView):
             # convierte usuarios a json
             serializer = UsuarioSerializer(usuarios, many=True)
 
-            return Response(serializer.data, status=HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             # Manejar la excepción aquí, puedes imprimir un mensaje de error o retornar una respuesta de error.
-            return Response({"error": f'Error al listar usuarios: {str(e)}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f'Error al listar usuarios: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CrearUsuario(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = []
 
     def post(self, request):
         # Deserializar la solicitud para obtener los datos del nuevo usuario
@@ -37,13 +48,21 @@ class CrearUsuario(APIView):
             serializer.save()
 
             # Devolver una respuesta exitosa
-            return Response(serializer.data, status=HTTP_201_CREATED)
+            # return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            login_url = reverse('login-usuario')
+
+            # Redirigir a la vista de login con los parámetros del usuario
+            redirect_url = f"{login_url}?username={request.data.get('username')}&password={request.data.get('password')}"
+            return Response({'redirect_url': redirect_url}, status=status.HTTP_201_CREATED)
 
         # Devolver una respuesta con errores de validación si los datos no son válidos
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ModificarUsuario(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = []
 
     def get_usuario(self, id):
         Usuario = get_user_model()
@@ -63,7 +82,7 @@ class ModificarUsuario(APIView):
         usuario = self.get_usuario(id)
 
         if not usuario:
-            return Response({"error": "Usuario no encontrado"}, status=HTTP_404_NOT_FOUND)
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
         # Deserializar la solicitud para obtener los datos actualizados del usuario
         serializer = UsuarioSerializer(usuario, data=request.data)
@@ -73,33 +92,125 @@ class ModificarUsuario(APIView):
                 # Guardar los datos actualizados en la base de datos
                 serializer.save()
                 # Devolver una respuesta exitosa
-                return Response(serializer.data, status=HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            return Response({"error": f"Error al modificar usuario: {str(e)}"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Error al modificar usuario: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, id):
         # Obtener el objeto del usuario que se va a "eliminar"
         usuario = self.get_usuario(id)
 
         if not usuario:
-            return Response({"error": "Usuario no encontrado"}, status=HTTP_404_NOT_FOUND)
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             # "Desactivar" el usuario estableciendo is_active en False
             usuario.is_active = False
             usuario.save()
-            return Response({"mensaje": "Usuario eliminado correctamente"}, status=HTTP_200_OK)
+            return Response({"mensaje": "Usuario eliminado correctamente"}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response({"error": f"Error al desactivar usuario: {str(e)}"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Error al desactivar usuario: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class LoginUsuario(APIView):
-    pass
+class LoginUsuario(ObtainAuthToken):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = []
+
+    def post(self, request, **kwargs):
+        try:
+
+            # Obtiene las credenciales del cuerpo de la solicitud
+            login_serializer = self.serializer_class(data=request.data, context={'request': request})
+            if login_serializer.is_valid():  # valida si el usuario existe
+
+                user = login_serializer.validated_data['user'] # obtiene los datos
+                if user.is_active: # valida si el usuario esta activo
+                    # Genera o recupera el token
+                    token, created = Token.objects.get_or_create(user=user)
+
+                    # serializa los datos del usuario
+                    user_serializer = UsuarioSerializer(user)
+                    if created:
+                        # si se creeo el token,
+                        # Devuelve el token y otros detalles si es necesario
+                        return Response({
+                            'token': token.key,
+                            'username': user_serializer.data,
+                            'message': 'Inicio de Sesión Exitoso'
+                        }, status=status.HTTP_201_CREATED)
+                    else:
+                        # Si no se creó el token, se eliminan las sesiones, se borra el token viejo y se crea un token nuevo
+                        all_session = Session.objects.filter(expire_date__gte=datetime.datetime.now())
+                        if all_session.exists():
+                            # borra las sessiones, en caso de que las haya
+                            for session in all_session:
+                                session_data = session.get_decoded()
+                                if user.id == int(session_data.get('_auth_user_id')):
+                                    session.delete()
+
+                        token.delete()
+                        token = Token.objects.create(user=user)
+                        return Response({
+                            'token': token.key,
+                            'username': user_serializer.data,
+                            'message': 'Inicio de Sesión Exitoso'
+                        }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'error': 'Usuario inactivo'}, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                return Response({'error': 'Nombre de usuario o contraseña incorrectos'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # Manejar otras excepciones si es necesario
+            return Response({'error': f'Error en la autenticación: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LogoutUsuario(APIView):
-    pass
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # obtiene el token
+            token = request.auth
+            token = Token.objects.filter(key=token).first()
+            # valida que exista el token en base de datos
+            if token:
+                # obtiene el usuario del token
+                user = token.user
+                all_session = Session.objects.filter(expire_date__gte=datetime.datetime.now())
+                if all_session.exists():
+                    for session in all_session:
+                        session_data = session.get_decoded()
+                        if user.id == int(session_data.get('_auth_user_id')):
+                            session.delete()
+                # borra las sessiones, en caso de que las haya
+                # borra el token
+                token.delete()
+                message = 'Token Eliminado'
+                return Response({'message': message},
+                                status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'No se ha encontrado un usuario con estas credenciales'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({'error': f'Error durante el logout: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProtectedView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Acción que solo puede ser realizada por usuarios autenticados
+        return Response({'message': 'Acceso permitido a la vista protegida.'})
