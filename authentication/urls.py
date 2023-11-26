@@ -18,6 +18,7 @@ from django.urls import path
 from .views import *
 urlpatterns = [
     path('', ListarUsuario.as_view(), name='listar-usuarios'),
+    path('<int:id>/', ListarUsuario.as_view(), name='listar-usuarios'),
     path('registrar/', CrearUsuario.as_view(), name='registrar-usuario'),
     path('modificar/<int:id>', ModificarUsuario.as_view(), name='modificar-usuario'),
     path('login/', LoginUsuario.as_view(), name='login-usuario'),

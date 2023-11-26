@@ -1,7 +1,7 @@
 import datetime
 from django.contrib.auth import get_user_model
-from django.urls.base import reverse
 from django.contrib.sessions.models import Session
+from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,28 +9,52 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UsuarioSerializer
+from .serializers import ListarUsuarioSerializer, CrearUsuarioSerializer, ActualizarUsuarioSerializer, \
+    LoginUsuarioSerializer
 
 
 # Create your views here.
+
+def get_usuario(id):
+
+    Usuario = get_user_model()
+    try:
+        # Intenta obtener el usuario por ID que esté activo
+        usuario = Usuario.objects.get(id=id, is_active=True, is_superuser=False)
+        return usuario
+
+    except Exception:
+        # Manejar otras excepciones
+        return None
+
 
 class ListarUsuario(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = []
 
-    def get(self, request):
+    def get(self, request, id=None):
+
         try:
-            # captura el modelo de usuarios actual y los lista
+            # Captura el modelo de usuarios actual
             User = get_user_model()
-            usuarios = User.objects.filter(is_active=True, is_superuser=False).all()
 
-            # convierte usuarios a json
-            serializer = UsuarioSerializer(usuarios, many=True)
+            if id is not None:
+                # Obtener un solo usuario por ID
+                usuario = get_usuario(id)
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                if usuario:
+                    serializer = ListarUsuarioSerializer(usuario)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                # Listar todos los usuarios
+                usuarios = User.objects.filter(is_active=True, is_superuser=False).all()
+                serializer = ListarUsuarioSerializer(usuarios, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            # Manejar la excepción aquí, puedes imprimir un mensaje de error o retornar una respuesta de error.
+
             return Response({"error": f'Error al listar usuarios: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -41,20 +65,14 @@ class CrearUsuario(APIView):
 
     def post(self, request):
         # Deserializar la solicitud para obtener los datos del nuevo usuario
-        serializer = UsuarioSerializer(data=request.data)
+        serializer = CrearUsuarioSerializer(data=request.data)
 
         if serializer.is_valid():
             # Guardar el nuevo usuario en la base de datos
             serializer.save()
 
             # Devolver una respuesta exitosa
-            # return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            login_url = reverse('login-usuario')
-
-            # Redirigir a la vista de login con los parámetros del usuario
-            redirect_url = f"{login_url}?username={request.data.get('username')}&password={request.data.get('password')}"
-            return Response({'redirect_url': redirect_url}, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         # Devolver una respuesta con errores de validación si los datos no son válidos
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -64,28 +82,15 @@ class ModificarUsuario(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = []
 
-    def get_usuario(self, id):
-        Usuario = get_user_model()
-
-        try:
-            # Intenta obtener el usuario por ID que esté activo
-            usuario = Usuario.objects.get(id=id, is_active=True, is_superuser=False)
-            return usuario
-        except Usuario.DoesNotExist:
-            return None
-        except Exception as e:
-            # Manejar otras excepciones de la base de datos
-            return None
-
     def put(self, request, id):
         # Obtener el objeto del usuario que se va a actualizar
-        usuario = self.get_usuario(id)
+        usuario = get_usuario(id)
 
         if not usuario:
             return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
         # Deserializar la solicitud para obtener los datos actualizados del usuario
-        serializer = UsuarioSerializer(usuario, data=request.data)
+        serializer = ActualizarUsuarioSerializer(usuario, data=request.data)
 
         try:
             if serializer.is_valid():
@@ -102,7 +107,7 @@ class ModificarUsuario(APIView):
 
     def delete(self, request, id):
         # Obtener el objeto del usuario que se va a "eliminar"
-        usuario = self.get_usuario(id)
+        usuario = get_usuario(id)
 
         if not usuario:
             return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
@@ -129,13 +134,13 @@ class LoginUsuario(ObtainAuthToken):
             login_serializer = self.serializer_class(data=request.data, context={'request': request})
             if login_serializer.is_valid():  # valida si el usuario existe
 
-                user = login_serializer.validated_data['user'] # obtiene los datos
-                if user.is_active: # valida si el usuario esta activo
+                user = login_serializer.validated_data['user']  # obtiene los datos
+                if user.is_active:  # valida si el usuario esta activo
                     # Genera o recupera el token
                     token, created = Token.objects.get_or_create(user=user)
 
                     # serializa los datos del usuario
-                    user_serializer = UsuarioSerializer(user)
+                    user_serializer = LoginUsuarioSerializer(user)
                     if created:
                         # si se creeo el token,
                         # Devuelve el token y otros detalles si es necesario
