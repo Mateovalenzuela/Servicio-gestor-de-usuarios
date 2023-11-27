@@ -1,176 +1,71 @@
 import datetime
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
-from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .serializers import ListarUsuarioSerializer, CrearUsuarioSerializer, ActualizarUsuarioSerializer, \
     LoginUsuarioSerializer
 
 
 # Create your views here.
 
-def get_usuario(id):
-    Usuario = get_user_model()
-    try:
-        # Intenta obtener el usuario por ID que esté activo
-        usuario = Usuario.objects.get(id=id, is_active=True, is_superuser=False)
-        return usuario
-
-    except Exception:
-        # Manejar otras excepciones
-        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-
-
-def check_path_data(id):
-    try:
-        # Intenta convertir el ID a un entero
-        id_as_int = int(id)
-        return id_as_int
-    except ValueError:
-        # Si no se puede convertir a un entero, la ruta es inválida
-        return Response({"error": "Ruta inválida"}, status=status.HTTP_404_NOT_FOUND)
-
-
-class ListarUsuario(APIView):
+class UsuarioViewSet(ViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = []
+    permission_classes = [AllowAny]
 
-    def get(self, request, id=None):
+    @staticmethod
+    def get_queryset(pk=None):
+        if pk is None:
+            return ListarUsuarioSerializer.Meta.model.objects.filter(is_active=True, is_superuser=False)
+        return ListarUsuarioSerializer.Meta.model.objects.filter(id=pk, is_active=True, is_superuser=False).first()
 
-        try:
-            # chequea si hay id como parametro, si lo hay el objetivo es listar un usuario, si no hay id, se listan todos
-            if id is not None:
+    def list(self, request):
+        serializer = ListarUsuarioSerializer(self.get_queryset(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-                # chequea que el ID sea int
-                valid_path_or_response = check_path_data(id)
-                if Response == type(valid_path_or_response):
-                    # retorna error: ruta invalida
-                    return valid_path_or_response
+    def retrieve(self, request, pk=None):
+        usuario = self.get_queryset(pk)
+        if usuario:
+            serializer = ListarUsuarioSerializer(usuario)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # chequea que exista un usuario para ese ID
-                valid_user_or_response = get_usuario(id)
-                if Response == type(valid_user_or_response):
-                    # retorna error: usuario no encontrado
-                    return valid_user_or_response
-
-                # en esta instancia el usuario existe
-                usuario = valid_user_or_response
-                serializer = ListarUsuarioSerializer(usuario)
-
-                # Retorna exitosamente un usuario como json para el ID requerido
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            else:
-                # Captura el modelo de usuarios actual
-                User = get_user_model()
-
-                # Listar todos los usuarios
-                usuarios = User.objects.filter(is_active=True, is_superuser=False).all()
-                serializer = ListarUsuarioSerializer(usuarios, many=True)
-                # Retorna todos los usuarios como json
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            #  Captura errores de servidor
-            return Response({"error": f'Error al listar usuarios: {str(e)}'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class CrearUsuario(APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = []
-
-    def post(self, request):
-        # Deserializar la solicitud para obtener los datos del nuevo usuario
+    def create(self, request):
         serializer = CrearUsuarioSerializer(data=request.data)
-
         if serializer.is_valid():
-            # Guardar el nuevo usuario en la base de datos
             serializer.save()
-
-            # Devolver una respuesta exitosa
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        # Devolver una respuesta con errores de validación si los datos no son válidos
+            return Response({'message': 'Usuario creado'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ModificarUsuario(APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = []
-
-    def put(self, request, id):
-        # Obtener el objeto del usuario que se va a actualizar
-
-        # chequea que el ID sea int
-        valid_path_or_response = check_path_data(id)
-        if Response == type(valid_path_or_response) or id is None:
-            # retorna error: ruta invalida
-            return valid_path_or_response
-
-        # chequea que exista un usuario para ese ID
-        valid_user_or_response = get_usuario(id)
-        if Response == type(valid_user_or_response):
-            # retorna error: usuario no encontrado
-            return valid_user_or_response
-
-        # en esta instancia existe un usuario válido
-        usuario = valid_user_or_response
-        # Deserializar la solicitud para obtener los datos actualizados del usuario
-        serializer = ActualizarUsuarioSerializer(usuario, data=request.data)
-
-        try:
+    def update(self, request, pk=None):
+        usuario = self.get_queryset(pk)
+        if usuario:
+            serializer = ActualizarUsuarioSerializer(usuario, data=request.data)
             if serializer.is_valid():
-                # Guardar los datos actualizados en la base de datos
                 serializer.save()
-                # Devolver una respuesta exitosa
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception as e:
-            # Captura error sobre el servidor
-            return Response({"error": f"Error al modificar usuario: {str(e)}"},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def delete(self, request, id):
-
-        # chequea que el ID sea int
-        valid_path_or_response = check_path_data(id)
-        if Response == type(valid_path_or_response) or id is None:
-            # retorna error: ruta invalida
-            return valid_path_or_response
-
-        # chequea que exista un usuario para ese ID
-        valid_user_or_response = get_usuario(id)
-        if Response == type(valid_user_or_response):
-            # retorna error: usuario no encontrado
-            return valid_user_or_response
-
-        # en esta instancia existe un usuario válido
-        # Obtener el objeto del usuario que se va a "eliminar"
-        usuario = valid_user_or_response
-        try:
-            # "Desactivar" el usuario estableciendo is_active en False
+    def destroy(self, request, pk=None):
+        usuario = self.get_queryset(pk).filter(id=pk).first()
+        if usuario:
             usuario.is_active = False
             usuario.save()
-            return Response({"mensaje": "Usuario eliminado correctamente"}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            # captura errores del servidor
-            return Response({"error": f"Error al desactivar usuario: {str(e)}"},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            Response({'message': 'Usuario eliminado'}, status=status.HTTP_201_CREATED)
+        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginUsuario(ObtainAuthToken):
     authentication_classes = [TokenAuthentication]
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     def post(self, request, **kwargs):
         try:
