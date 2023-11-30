@@ -2,54 +2,51 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 
-class ListarUsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
+class UsuarioSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        min_length=4,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('username').validators
+    )
+    password = serializers.CharField(
+        min_length=8,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('password').validators
+    )
+    email = serializers.EmailField(max_length=50, required=True)
+    first_name = serializers.CharField(min_length=2, max_length=50, required=True)
+    last_name = serializers.CharField(min_length=2, max_length=50, required=True)
 
-
-class CrearUsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'password', 'email', 'first_name', 'last_name')
-        extra_kwargs = {'password': {'write_only': True}}
-
-    email = serializers.CharField(max_length=50, required=True)
-    first_name = serializers.CharField(max_length=50, required=True)
-    last_name = serializers.CharField(max_length=50, required=True)
-
-    def validate(self, data):
-        # Validar si el nombre de usuario ya existe en la base de datos
-        username = data.get('username')
-        if len(username) > 30:
-            raise serializers.ValidationError("Introduzca un nombre de usuario válido. El username debe contener menos de 30 caracteres.")
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
-        return data
-
-    def create(self, validated_data):
-        # Extraer la contraseña del diccionario de datos validados
-        password = validated_data.pop('password', None)
-
-        # Crear una nueva instancia del usuario con los datos validados
-        user = User(**validated_data)
-        # Establecer la contraseña utilizando el método set_password
-        if password:
-            user.set_password(password)
-        # Guardar el usuario en la base de datos
-        user.save()
-        return user
-
-
-class ActualizarUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'email', 'first_name', 'last_name')
-        read_only_fields = ('id', 'username', 'email')
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'username': {'read_only': True},
+            'email': {'read_only': True},
+            'password': {'write_only': True}
+        }
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        user.save()
+        return user
 
     def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
 
+        # Solo establecer la contraseña si se proporciona
         password = validated_data.get('password')
         if password:
             instance.set_password(password)
@@ -62,7 +59,16 @@ class LoginUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'password')
-        write_only_fields = ('password',)
 
-    username = serializers.CharField(max_length=30, required=True)
-    password = serializers.CharField(required=True)
+    username = serializers.CharField(
+        min_length=4,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('username').validators
+    )
+    password = serializers.CharField(
+        min_length=8,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('password').validators
+    )
