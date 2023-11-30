@@ -1,8 +1,7 @@
 import datetime
-from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
 from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, GenericViewSet
 from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,44 +9,78 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .serializers import ListarUsuarioSerializer, CrearUsuarioSerializer, ActualizarUsuarioSerializer, \
-    LoginUsuarioSerializer
+from .serializers import LoginUsuarioSerializer, UsuarioSerializer
 
 
 # Create your views here.
 
-class UsuarioViewSet(ViewSet):
+class UsuarioViewSet(GenericViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [AllowAny]
 
-    @staticmethod
-    def get_queryset(pk=None):
+    serializer_class = UsuarioSerializer
+
+    def get_queryset(self, pk=None):
         if pk is None:
-            return ListarUsuarioSerializer.Meta.model.objects.filter(is_active=True, is_superuser=False)
-        return ListarUsuarioSerializer.Meta.model.objects.filter(id=pk, is_active=True, is_superuser=False).first()
+            return self.get_serializer().Meta.model.objects.filter(is_active=True, is_superuser=False)
+        return self.get_serializer().Meta.model.objects.filter(id=pk, is_active=True, is_superuser=False).first()
 
     def list(self, request):
-        serializer = ListarUsuarioSerializer(self.get_queryset(), many=True)
+        """
+        Retorna un listado de todos los usuarios
+
+
+        :param request:
+        :return: Lista vacía o Lista con todos los usuarios
+        """
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
+        """
+        Retorna un usuario
+
+
+        :param request:
+        :param pk: int
+        :return: El usuario (id, username, password, email, first_name, last_name) o error: usuario no encontrado
+        """
+
         usuario = self.get_queryset(pk)
         if usuario:
-            serializer = ListarUsuarioSerializer(usuario)
+            serializer = self.get_serializer(usuario)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request):
-        serializer = CrearUsuarioSerializer(data=request.data)
+        """
+        Crea un usuario
+
+
+        :param request: username, password, email, first_name, last_name.
+        :return: message: usuario creado. o error en el/los campos.
+        """
+
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'Usuario creado'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
+        """
+        Actualiza un usuario
+
+
+        :param request: Todos opcionales, password, first_name, last_name
+        :param pk: int
+        :return: El usuario actualizado (id, username, password, email, first_name, last_name) o error: usuario no encontrado
+        """
+
         usuario = self.get_queryset(pk)
         if usuario:
-            serializer = ActualizarUsuarioSerializer(usuario, data=request.data)
+            serializer = self.get_serializer(usuario, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -55,6 +88,15 @@ class UsuarioViewSet(ViewSet):
         return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
+        """
+        Elimina un usuario
+
+
+        :param request:
+        :param pk: int
+        :return: message, Usuario eliminado. O error: Usuario no encontrado.
+        """
+
         usuario = self.get_queryset(pk).filter(id=pk).first()
         if usuario:
             usuario.is_active = False
@@ -65,9 +107,19 @@ class UsuarioViewSet(ViewSet):
 
 class LoginUsuario(ObtainAuthToken):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [AllowAny]
+    permission_classes = []
 
     def post(self, request, **kwargs):
+
+        """
+        Inicia la session de un usuario
+
+
+        :param request: username, password.
+        :return: {token, username y message} o error de varios tipos
+        """
+
+
         try:
 
             # Obtiene las credenciales del cuerpo de la solicitud
@@ -123,6 +175,15 @@ class LogoutUsuario(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Elimia la session de un usuario
+
+
+        :param request: token
+        :return: {message: Token eliminado} o error de varios tipos
+        """
+
+
         try:
             # obtiene el token
             token = request.auth
