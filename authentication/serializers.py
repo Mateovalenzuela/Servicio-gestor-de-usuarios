@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UsuarioSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -54,21 +54,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    pass
 
-class LoginUsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'password')
-
-    username = serializers.CharField(
-        min_length=4,
-        max_length=50,
-        required=True,
-        validators=User._meta.get_field('username').validators
-    )
-    password = serializers.CharField(
-        min_length=8,
-        max_length=50,
-        required=True,
-        validators=User._meta.get_field('password').validators
-    )
