@@ -20,6 +20,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from authentication.views import Login, Logout, ProtectedView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -41,5 +42,8 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/usuario/', include('authentication.urls'))
+    path('api/login/', Login.as_view(), name='login'),
+    path('api/logout/', Logout.as_view(), name='logout'),
+    path('api/usuario/', include('authentication.urls')),
+    path('vista/', ProtectedView.as_view(), name='protected-view')
 ]

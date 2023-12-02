@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+
 class UsuarioSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         min_length=4,
@@ -24,15 +25,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', 'email', 'first_name', 'last_name')
         extra_kwargs = {
             'id': {'read_only': True},
-            'username': {'read_only': True},
             'email': {'read_only': True},
             'password': {'write_only': True}
         }
 
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
-        return value
+    def to_representation(self, instance):
+        return {
+            'username': instance.username,
+            'email': instance.email,
+            'first_name': instance.first_name,
+            'last_name': instance.last_name
+        }
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -43,6 +46,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('username', instance.first_name)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
 
@@ -54,6 +58,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     pass
-
