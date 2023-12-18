@@ -45,18 +45,58 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+class UpdateUsuarioSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        min_length=4,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('username').validators
+    )
+    first_name = serializers.CharField(min_length=2, max_length=50, required=True)
+    last_name = serializers.CharField(min_length=2, max_length=50, required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name')
+
+    def validate_username(self, value):
+        # Verifica si ya existe un usuario con el mismo nombre de usuario
+        existing_user = User.objects.filter(username=value).exclude(pk=self.instance.pk).first()
+        if existing_user:
+            raise serializers.ValidationError('Este nombre de usuario ya está en uso.')
+        return value
+
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
 
-        # Solo establecer la contraseña si se proporciona
-        password = validated_data.get('password')
-        if password:
-            instance.set_password(password)
-
         instance.save()
         return instance
+
+
+class PasswordOfUserSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        min_length=8,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('password').validators
+    )
+    password2 = serializers.CharField(
+        min_length=8,
+        max_length=50,
+        required=True,
+        validators=User._meta.get_field('password').validators
+    )
+
+    def validate(self, data):
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError({'password': 'Debe ingresar ambas contraseñas iguales'})
+        return data
+
+
+
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
