@@ -22,6 +22,10 @@ from drf_yasg import openapi
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from authentication.views import Login, Logout, ProtectedView
 
+# archivos estaticos
+from django.conf import settings
+from django.conf.urls.static import static
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Gestión de Usuarios API",
@@ -47,3 +51,5 @@ urlpatterns = [
     path('api/usuario/', include('authentication.urls')),
     path('vista/', ProtectedView.as_view(), name='protected-view')
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
