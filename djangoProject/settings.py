@@ -15,6 +15,9 @@ from pathlib import Path
 import django.core.mail.backends.smtp
 from dotenv import load_dotenv
 from datetime import timedelta
+from .setings.jwt_setings import *
+from .setings.swagger_setings import *
+from .setings.rest_framework_setings import *
 
 # carga las varibles de entorno
 load_dotenv()
@@ -29,9 +32,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [
+    'localhost',
+]
+CORS_ALLOW_ALL_ORIGINS = True
+
+APPEND_SLASH = False
 
 # Application definition
 
@@ -48,8 +56,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_yasg',
-    'authentication',
-    'utils'
+    'naomi',
+    'authentication'
 ]
 
 MIDDLEWARE = [
@@ -63,13 +71,6 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-APPEND_SLASH = False
-
-SWAGGER_SETTINGS = {
-    'DOC_EXPANSION': 'none'
-}
 
 ROOT_URLCONF = 'djangoProject.urls'
 
@@ -106,13 +107,6 @@ DATABASES = {
     }
 }
 
-# Configuración de Django Rest Framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -139,7 +133,7 @@ AUTH_USER_MODEL = 'authentication.Usuario'
 
 LANGUAGE_CODE = 'es-ar'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 
 USE_I18N = True
 
@@ -150,26 +144,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'BLACKLIST_ENABLED': True,  # Habilitar la blacklist
-}
 
-# EMAIL CONFIG
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', '')
-EMAIL_HOST = os.getenv('EMAIL_HOST', '')
-EMAIL_PORT = os.getenv('EMAIL_PORT', '')
-
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-
-
-# archivos estaticos
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
@@ -178,4 +153,4 @@ STATIC_URL = 'static/'
 #     BASE_DIR / "static",
 # ]
 
-STATIC_ROOT = "staticfiles"
+# STATIC_ROOT = "staticfiles"

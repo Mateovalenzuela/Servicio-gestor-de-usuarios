@@ -1,4 +1,5 @@
 from django.test import TestCase, Client
+from ..models import Usuario, Perfil
 from ..serializers import UsuarioSerializer
 
 
@@ -7,23 +8,29 @@ class TestUsuarioViewSet(TestCase):
         self.client = Client()
         self.url_api_usuario = '/api/usuario/'
         self.url_api_login = '/api/login/'
-        self.model_usuario = UsuarioSerializer.Meta.model
+        self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
             username='test',
             password='test1234',
-            email='test@mail.com',
-            nombre='Leo',
-            apellido='Messi'
+            email='test@mail.com'
         )
+
+        self.perfil_user = Perfil.objects.create(
+             nombre='Tester',
+             apellido='Super tester',
+             usuario=self.user
+         )
+
+        self.valid_perfil_user = {
+            "nombre": 'Leo',
+            "apellido": 'Messi',
+        }
 
         self.valid_user = {
             'username': 'messi',
             'password': 'messi123',
-            'email': 'messi@gmail.com',
-            'nombre': 'Leo',
-            'apellido': 'Messi',
-            'fecha_nacimiento': '12-03-03'
+            'email': 'messi@gmail.com'
         }
 
         self.logged_user = self.client.post(
@@ -37,7 +44,31 @@ class TestUsuarioViewSet(TestCase):
         )
         self.assertEquals(response.status_code, 201)
 
+    def test_api_add_perfil(self):
+        # agrega un usuario sin perfil
+        usuario = Usuario.objects.create_user(
+            username='temp',
+            password='temp',
+            email='temp@email.com'
+        )
+        usuario.save()
+
+        path = f'{self.url_api_usuario}{usuario.id}/add_perfil/'
+        response = self.client.post(
+            path=path,
+            data=self.valid_perfil_user
+        )
+        self.assertEquals(response.status_code, 201)
+
     def test_api_get_all_users(self):
+        # agrega un usuario sin perfil
+        usuario = Usuario.objects.create_user(
+            username='temp',
+            password='temp',
+            email='temp@email.com'
+        )
+        usuario.save()
+
         response = self.client.get(
             path=self.url_api_usuario
         )
@@ -54,32 +85,53 @@ class TestUsuarioViewSet(TestCase):
             UsuarioSerializer(self.user).data
         )  # compara usuario recibido con usuario creado, ambos en formato dict
 
-    def test_api_update_user(self):
+
+    def test_api_update_username(self):
+        id = self.user.id
+        data = {'username': 'nombre_de_usuario'}
+        response = self.client.patch(
+            path=f'{self.url_api_usuario}{id}/update_username/',
+            data=data,
+            content_type='application/json'
+        )
+        self.assertEquals(response.status_code, 200)
+
+        # valida que haya actualizado correctamente el username
+        usuario_actualizado = Usuario.objects.get(id=id)
+        self.assertEquals(data['username'], usuario_actualizado.username)
+
+        # Caso de error con username invalido
+        id = self.user.id
+        data = {'username': 'nombre-de-usuario-invalido#$@'}
+        response = self.client.patch(
+            path=f'{self.url_api_usuario}{id}/update_username/',
+            data=data,
+            content_type='application/json'
+        )
+        self.assertEquals(response.status_code, 400)
+
+    def test_api_update_perfil(self):
         id = self.user.id
         data = {'nombre': 'UsuarioDeTest', 'apellido': 'UsuarioDeTest'}
 
         cliente = self.client
         response = cliente.put(
-            path=f'{self.url_api_usuario}{id}/',
+            path=f'{self.url_api_usuario}{id}/update_perfil/',
             data=data,
             content_type='application/json',  # Establecer tipo de contenido
         )
         self.assertEquals(response.status_code, 200)
 
         # obtener usuario actualizado
-        usuario_actualizado = cliente.get(
-            path=f'{self.url_api_usuario}{id}/'
-        )
-        self.assertEquals(usuario_actualizado.status_code, 200)
+        usuario_actualizado = Usuario.objects.get(id=id)
 
         # comparar data para actualizar con el usuario ya actualizado en bd
-        usuario_actualizado = dict(usuario_actualizado.json())
         self.assertEquals(
-            usuario_actualizado['nombre'],
+            usuario_actualizado.perfil.nombre,
             data['nombre']
         )
         self.assertEquals(
-            usuario_actualizado['apellido'],
+            usuario_actualizado.perfil.apellido,
             data['apellido']
         )
 

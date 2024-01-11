@@ -1,6 +1,5 @@
 from django.test import TestCase, Client
-
-from ..serializers import UsuarioSerializer
+from ..models import Usuario, Perfil
 
 
 # Create your tests here.
@@ -12,33 +11,39 @@ class UsuarioTestCase(TestCase):
         self.url_api_usuario = '/api/usuario/'
         self.url_api_login = '/api/login/'
         self.url_api_logout = '/api/logout/'
-        self.model_usuario = UsuarioSerializer.Meta.model
+        self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
             username='test',
             password='test1234',
-            email='test@mail.com',
-            nombre='Leo',
-            apellido='Messi'
+            email='test@mail.com'
         )
+
+        self.perfil_user = Perfil.objects.create(
+            nombre='Tester',
+            apellido='Super tester',
+            usuario=self.user
+        )
+
+        self.valid_perfil_user = {
+            "nombre": 'Leo',
+            "apellido": 'Messi',
+        }
 
         self.valid_user = {
             'username': 'messi',
             'password': 'messi123',
-            'email': 'messi@gmail.com',
-            'nombre': 'Leo',
-            'apellido': 'Messi',
-            'fecha_nacimiento': '12-03-03'
+            'email': 'messi@gmail.com'
         }
 
         self.logged_user = self.client.post(
             path=self.url_api_login,
-            data={'username': 'test', 'password': 'test1234'})
+            data={'email': 'test@mail.com', 'password': 'test1234'})
 
     def test_api_login(self):
         response = self.client.post(
             path=self.url_api_login,
-            data={'username': 'test', 'password': 'test1234'}
+            data={'email': 'test@mail.com', 'password': 'test1234'}
         )
         self.assertEquals(response.status_code, 200)
 
@@ -53,12 +58,12 @@ class UsuarioTestCase(TestCase):
         # Inicia sesión con el usuario recién creado
         response = self.client.post(
             path=self.url_api_login,
-            data={'username': self.valid_user['username'], 'password': self.valid_user['password']}
+            data={'email': self.valid_user['email'], 'password': self.valid_user['password']}
         )
         self.assertEqual(response.status_code, 200)
 
         # Verifica que el usuario está autenticado
-        self.assertTrue(self.client.login(username=self.valid_user['username'], password=self.valid_user['password']))
+        self.assertTrue(self.client.login(username=self.valid_user['email'], password=self.valid_user['password']))
 
     def test_api_logout(self):
         data = dict(self.logged_user.json())

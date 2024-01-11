@@ -1,0 +1,4 @@
+
+SWAGGER_SETTINGS = {
+    'DOC_EXPANSION': 'none'
+}

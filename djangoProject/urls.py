@@ -49,7 +49,7 @@ urlpatterns = [
     path('api/login/', Login.as_view(), name='login'),
     path('api/logout/', Logout.as_view(), name='logout'),
     path('api/usuario/', include('authentication.urls')),
-    path('vista/', ProtectedView.as_view(), name='protected-view')
+    path('vista/', ProtectedView.as_view(), name='protected-view'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

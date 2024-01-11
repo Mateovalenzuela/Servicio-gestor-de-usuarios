@@ -1,4 +1,5 @@
 .idea
 .env
+.pem
 /db.sqlite3
-/utils/temp
+/authentication/temp

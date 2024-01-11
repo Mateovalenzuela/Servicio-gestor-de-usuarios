@@ -1,20 +1,26 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Usuario
+from .models import Usuario, Perfil
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ('username', 'password', 'email', 'nombre', 'apellido')
+        fields = ('username', 'password', 'email')
 
     def to_representation(self, instance):
-        return {
+        representation = {
             'username': instance.username,
             'email': instance.email,
-            'nombre': instance.nombre,
-            'apellido': instance.apellido
         }
+
+        if hasattr(instance, 'perfil'):
+            representation['perfil'] = {
+                'nombre': instance.perfil.nombre,
+                'apellido': instance.perfil.apellido
+            }
+
+        return representation
 
     def create(self, validated_data):
         # Extraer la contraseña del diccionario de datos validados
@@ -30,10 +36,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
 
-class UpdateUsuarioSerializer(serializers.ModelSerializer):
+class UpdateUsernameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ('username', 'nombre', 'apellido')
+        fields = ('username',)
 
     def validate_username(self, value):
         # Verifica si ya existe un usuario con el mismo nombre de usuario
@@ -44,9 +50,6 @@ class UpdateUsuarioSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
-        instance.nombre = validated_data.get('nombre', instance.nombre)
-        instance.apellido = validated_data.get('apellido', instance.apellido)
-
         instance.save()
         return instance
 
@@ -68,6 +71,23 @@ class PasswordSerializer(serializers.Serializer):
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError({'password': 'Debe ingresar ambas contraseñas iguales'})
+        return data
+
+
+class PerfilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Perfil
+        fields = ('nombre', 'apellido', 'fecha_nacimiento')
+
+
+class ConfirmarEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ('password', 'email')
+
+    def validate(self, data):
+        if not data['email']:
+            raise serializers.ValidationError({'email': 'El email es requerido'})
         return data
 
 
