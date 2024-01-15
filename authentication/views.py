@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import UsuarioSerializer, CustomTokenObtainPairSerializer, UpdateUsernameSerializer, \
+from .serializers import UsuarioSerializer, CustomTokenObtainPairSerializer, \
     PasswordSerializer, PerfilSerializer, ConfirmarEmailSerializer
 from .mixins import LoginAndIsOwnerMixin, AllowAny, IsAuthenticated
 
@@ -28,12 +28,12 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
             return self.model.objects.filter(is_active=True, is_superuser=False)
         return self.queryset
 
-    # def get_permissions(self):
-    #     # Aplicar el mixin solo a las acciones de Update, Retrieve, Destroy y set_password
-    #     if self.action in ['update', 'retrieve', 'destroy', 'set_password']:
-    #         return [LoginAndIsOwnerMixin()]
-    #
-    #     return [AllowAny()]
+    def get_permissions(self):
+        # Aplicar el mixin a todas las vistas excepto las de la lista
+        if self.action in ['list', 'create']:
+            return [AllowAny()]
+
+        return [LoginAndIsOwnerMixin()]
 
     def list(self, request):
         """
@@ -64,8 +64,8 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
                 serializer = self.serializer_class(usuario)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            return Response({'error': 'Servicio no disponible'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': f'Servicio no disponible: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         """
@@ -84,8 +84,8 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
                 'message': 'Error al registrarse',
                 'errors': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            return Response({'error': 'Servicio no disponible'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': f'Servicio no disponible: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'], url_path='add_perfil')
     def add_perfil_to_user(self, request, pk=None):
@@ -131,7 +131,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         """
         try:
             usuario = self.get_object(pk)
-            serializer = UpdateUsernameSerializer(usuario, data=request.data)
+            serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message': 'Username Actualizado'}, status=status.HTTP_200_OK)
