@@ -35,7 +35,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
+    '*'
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 

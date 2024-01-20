@@ -14,23 +14,14 @@ class AuthenticationController:
     def _build_response(self, status, data):
         return status, data
 
-    def login(self, password: str, username: str, email=None):
+    def login(self, password: str, email):
         try:
-
-            if email:
-                user = authenticate(
-                    email=email,
-                    password=password,
-                )  # devuelve un bool si existe o no un usuario para esas credenciales
-                # Crear un diccionario de datos para el serializador
-                serializer_data = {'email': email, 'password': password}
-            else:
-                user = authenticate(
-                    username=username,
-                    password=password,
-                )  # devuelve un bool si existe o no un usuario para esas credenciales
-                # Crear un diccionario de datos para el serializador
-                serializer_data = {'username': username, 'password': password}
+            user = authenticate(
+                email=email,
+                password=password,
+            )  # devuelve un bool si existe o no un usuario para esas credenciales
+            # Crear un diccionario de datos para el serializador
+            serializer_data = {'email': email, 'password': password}
 
             if user:
 

@@ -319,14 +319,12 @@ class Login(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
 
-        username = request.data.get('username', None)
         password = request.data.get('password', None)
         email = request.data.get('email', None)
 
         controller = AuthenticationController()
         status, data = controller.login(
             email=email,
-            username=username,
             password=password
         )
 
