@@ -193,6 +193,7 @@ class TestUsuarioViewSet(TestCase):
             path=f'{self.url_api_usuario}{id}/',
             headers=headers
         )
+        print(response.json())
         self.assertEquals(response.status_code, 200)
         self.assertEquals(
             dict(response.json()),
