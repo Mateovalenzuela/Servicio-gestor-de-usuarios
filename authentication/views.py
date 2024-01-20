@@ -1,13 +1,15 @@
 from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status as st
+from rest_framework import status as st, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .mixins import LoginAndIsOwnerMixin, AllowAny, IsAuthenticated
 from .controllers.UsuarioController import UsuarioController
 from .controllers.PerfilController import PerfilController
 from .controllers.AuthenticationController import AuthenticationController
+from .controllers.JWTController import JWTController
 
 
 # Create your views here.
@@ -198,7 +200,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         elif status == 404:
             return Response(
                 {'error': 'El usuario que desea actualizar no tiene datos de perfil'},
-                            status=st.HTTP_400_BAD_REQUEST
+                status=st.HTTP_400_BAD_REQUEST
             )
         else:
             return Response(
@@ -380,3 +382,14 @@ class ProtectedView(GenericAPIView):
             return Response({'message': 'Acceso permitido a la vista protegida.'})
         except Exception:
             return Response({'error': 'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class VeriifcarTokenView(GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        token = request.data.get('access_token', None)
+
+        controller = JWTController()
+        response = controller.validate_token(token)
+        return Response({'access_token': response}, status=status.HTTP_200_OK)

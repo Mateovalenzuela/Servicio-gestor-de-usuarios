@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from ..serializers import CustomTokenObtainPairSerializer
 from .UsuarioController import UsuarioController
+from .JWTController import JWTController
 
 
 class AuthenticationController:
@@ -20,20 +21,14 @@ class AuthenticationController:
                 email=email,
                 password=password,
             )  # devuelve un bool si existe o no un usuario para esas credenciales
-            # Crear un diccionario de datos para el serializador
-            serializer_data = {'email': email, 'password': password}
 
             if user:
-
-                login_serializer = self._get_serializer_class(data=serializer_data)
-
-                if login_serializer.is_valid():
-                    return self._build_response(200, {
-                        'token': login_serializer.validated_data.get('access'),
-                        'refresh-token': login_serializer.validated_data.get('refresh'),
-                        'username': user.username,
-                        'message': 'Inicio de Sesion Exitoso'
-                    })
+                controller = JWTController()
+                status, data = controller.create_token_for_user(
+                    email=email,
+                    password=password
+                )
+                return self._build_response(status, data)
 
             return self._build_response(
                 400, {'error': 'Contraseña o nombre de usuario incorrectos'}
