@@ -20,7 +20,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from authentication.views import Login, Logout, ProtectedView
+from authentication.views import Login, Logout, ProtectedView, VeriifcarTokenView
 
 # archivos estaticos
 from django.conf import settings
@@ -50,6 +50,7 @@ urlpatterns = [
     path('api/logout/', Logout.as_view(), name='logout'),
     path('api/usuario/', include('authentication.urls')),
     path('vista/', ProtectedView.as_view(), name='protected-view'),
+    path('verificar_token/', VeriifcarTokenView.as_view())
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
