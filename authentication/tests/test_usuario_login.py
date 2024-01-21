@@ -67,7 +67,7 @@ class UsuarioTestCase(TestCase):
 
     def test_api_logout(self):
         data = dict(self.logged_user.json())
-        token = data['token']
+        token = data['access_token']
 
         response = self.client.post(
             path=self.url_api_logout,
@@ -85,7 +85,7 @@ class UsuarioTestCase(TestCase):
 
     def test_api_protected_view(self):
         data = dict(self.logged_user.json())
-        token = data['token']
+        token = data['access_token']
         response = self.client.get(
             path=f'/vista/',
             headers={'Authorization': f'Bearer {token}'}

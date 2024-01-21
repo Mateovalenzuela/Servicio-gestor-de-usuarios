@@ -54,7 +54,7 @@ class TestUsuarioViewSet(TestCase):
             data=data
         )
         data = dict(response.json())
-        token = data['token']
+        token = data['access_token']
         return token
 
     def _get_usuario_by_username(self, username):
