@@ -1,5 +1,5 @@
 import re
-from datetime import timezone
+from datetime import timezone, datetime
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Usuario, Perfil
@@ -117,7 +117,13 @@ class PerfilSerializer(serializers.ModelSerializer):
         return value
 
     def validate_fecha_nacimiento(self, value):
-        if value > timezone.now().date():
+
+        # value type is <class 'datetime.date'>
+        if value is None:
+            raise serializers.ValidationError("El campo de fecha de nacimiento es obligatorio.")
+
+        # Verificar si la fecha de nacimiento es mayor que la fecha actual
+        if value > datetime.now().date():
             raise serializers.ValidationError("La fecha de nacimiento no puede ser mayor que la fecha actual.")
 
         return value

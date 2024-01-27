@@ -30,7 +30,7 @@ class PerfilController:
     def _build_response(self, status, data):
         return status, data
 
-    def add_perfil_to_user(self, id: int, nombre, apellido, fecha_nacimiento, imagen):
+    def add_perfil_to_user(self, id: int, nombre, apellido, fecha_nacimiento):
         try:
             usuario = UsuarioController().get_object_user(id)
             if usuario is None:
@@ -43,8 +43,7 @@ class PerfilController:
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
-                'fecha_nacimiento': fecha_nacimiento,
-                'imagen': imagen
+                'fecha_nacimiento': fecha_nacimiento
             }
 
             # serializa los datos del perfil
@@ -58,10 +57,13 @@ class PerfilController:
         except Exception as e:
             return self._build_response(500, {'error': f'Error de sistema: {e}'})
 
-    def update_perfil_to_user(self, user_id: id, nombre: str, apellido: str, fecha_nacimiento: str, imagen):
+    def update_perfil_to_user(self, user_id: id, nombre: str, apellido: str, fecha_nacimiento):
         try:
             usuario_controller = UsuarioController()
             usuario = usuario_controller.get_object_user(user_id)
+            if usuario is None:
+                return self._build_response(404, {'error': 'Usuario no encontrado'})
+
             # Verificar si el usuario no tiene datos de perfil
             if not hasattr(usuario, 'perfil'):
                 return self._build_response(404, {'error': 'El usuario que desea actualizar no tiene datos de perfil'})
@@ -69,8 +71,7 @@ class PerfilController:
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
-                'fecha_nacimiento': fecha_nacimiento,
-                'imagen': imagen
+                'fecha_nacimiento': fecha_nacimiento
             }
 
             # serializa los datos del perfil

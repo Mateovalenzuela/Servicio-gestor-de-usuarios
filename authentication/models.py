@@ -36,7 +36,7 @@ class Perfil(models.Model):
     )
     nombre = models.CharField(verbose_name='Nombre', max_length=100, blank=True, null=True)
     apellido = models.CharField(verbose_name='Apellido', max_length=100, blank=True, null=True)
-    fecha_nacimiento = models.DateField(verbose_name='Fecha de Nacimiento', blank=True, null=True, editable=False)
+    fecha_nacimiento = models.DateField(verbose_name='Fecha de Nacimiento', blank=True, null=True)
     imagen = models.ImageField(verbose_name='Imagen de Perfil', upload_to='perfil/', max_length=200, blank=True,
                                null=True)
 

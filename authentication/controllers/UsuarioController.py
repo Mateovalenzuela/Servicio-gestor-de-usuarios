@@ -8,14 +8,18 @@ class UsuarioController:
         self._serializer_class = UsuarioSerializer
         self._queryset = None
 
-    def _get_object(self, pk):
+    def _get_object(self, id: int):
         try:
 
-            usuario = self._model.objects.get(pk=pk, is_active=True)
+            if int != type(id):
+                raise ValueError(f"Id de tipo invalido")
+
+            usuario = self._model.objects.get(pk=id, is_active=True)
             return usuario
 
         except self._model.DoesNotExist:
             return None
+
         except Exception as e:
             raise Exception(f"Error al recuperar el usuario: {e}")
 
@@ -53,7 +57,7 @@ class UsuarioController:
                 data_usuario = usuario_serializer.data
                 return self._build_response(200, data_usuario)
             else:
-                return self._build_response(400, {'error': "Usuario no encontrado"})
+                return self._build_response(404, {'error': "Usuario no encontrado"})
         except Exception as e:
             return self._build_response(500, {'error': f'Error de sistema: {e}'})
 

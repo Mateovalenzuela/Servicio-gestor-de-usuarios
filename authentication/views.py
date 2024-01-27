@@ -1,5 +1,4 @@
 from rest_framework.generics import GenericAPIView
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -108,7 +107,6 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
             nombre=nombre,
             apellido=apellido,
             fecha_nacimiento=fecha_nacimiento,
-            imagen=imagen
         )
 
         if status == 200:
@@ -184,7 +182,6 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
             nombre=nombre,
             apellido=apellido,
             fecha_nacimiento=fecha_nacimeinto,
-            imagen=imagen
         )
 
         if status == 200:
