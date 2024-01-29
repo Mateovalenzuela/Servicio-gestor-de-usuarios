@@ -24,7 +24,7 @@ class JWTController:
         except Exception as e:
             return self._build_response(500, {'error': f'Servicio no disponible: {e}'})
 
-    def create_token_for_user(self, password: str, email):
+    def create_token_for_user(self, password: str, email: str):
         try:
 
             # Datos de usuario validados que existen en la base de datos
@@ -35,7 +35,7 @@ class JWTController:
 
             # Crear instancia de CustomTokenObtainPairSerializer
             serializer = self._serializer_class(data=user_data)
-            if serializer.is_valid(raise_exception=True):
+            if serializer.is_valid():
                 # Obtener el token de acceso y de actualización
                 access_token = serializer.validated_data.get('access')
                 refresh_token = serializer.validated_data.get('refresh')
