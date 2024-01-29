@@ -32,14 +32,6 @@ class PerfilController:
 
     def add_perfil_to_user(self, id: int, nombre, apellido, fecha_nacimiento):
         try:
-            usuario = UsuarioController().get_object_user(id)
-            if usuario is None:
-                return self._build_response(404, {'error': 'Usuario no encontrado'})
-
-            # Verificar si ya existe un perfil para el usuario
-            if hasattr(usuario, 'perfil'):
-                return self._build_response(400, {'message': 'Ya existe un perfil para este usuario.'})
-
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
@@ -50,6 +42,15 @@ class PerfilController:
             serializer = self._get_serializer_class(data=data_perfil)
 
             if serializer.is_valid():
+
+                usuario = UsuarioController().get_object_user(id)
+                if usuario is None:
+                    return self._build_response(404, {'error': 'Usuario no encontrado'})
+
+                # Verificar si ya existe un perfil para el usuario
+                if hasattr(usuario, 'perfil'):
+                    return self._build_response(400, {'message': 'Ya existe un perfil para este usuario.'})
+
                 serializer.save(usuario=usuario)
                 return self._build_response(200, {'message': 'Perfil Agregado a usuario'})
             return self._build_response(400, serializer.errors)
@@ -59,15 +60,6 @@ class PerfilController:
 
     def update_perfil_to_user(self, user_id: id, nombre: str, apellido: str, fecha_nacimiento):
         try:
-            usuario_controller = UsuarioController()
-            usuario = usuario_controller.get_object_user(user_id)
-            if usuario is None:
-                return self._build_response(404, {'error': 'Usuario no encontrado'})
-
-            # Verificar si el usuario no tiene datos de perfil
-            if not hasattr(usuario, 'perfil'):
-                return self._build_response(404, {'error': 'El usuario que desea actualizar no tiene datos de perfil'})
-
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
@@ -75,13 +67,29 @@ class PerfilController:
             }
 
             # serializa los datos del perfil
-            serializer = self._serializer_class(usuario.perfil, data=data_perfil)
+            serializer_data = self._serializer_class(data=data_perfil)
 
-            if serializer.is_valid():
-                serializer.save()
+            if serializer_data.is_valid():
+
+                usuario_controller = UsuarioController()
+                usuario = usuario_controller.get_object_user(user_id)
+                if usuario is None:
+                    return self._build_response(404, {'error': 'Usuario no encontrado'})
+
+                # Verificar si el usuario no tiene datos de perfil
+                if not hasattr(usuario, 'perfil'):
+                    return self._build_response(
+                        404, {'error': 'El usuario que desea actualizar no tiene datos de perfil'}
+                    )
+
+                usuario.perfil.nombre = serializer_data.validated_data['nombre']
+                usuario.perfil.apellido = serializer_data.validated_data['apellido']
+                usuario.perfil.fecha_nacimiento = serializer_data.validated_data['fecha_nacimiento']
+                usuario.perfil.save()
+
                 return self._build_response(200, {'message': 'Perfil actualizado'})
 
-            return self._build_response(400, serializer.errors)
+            return self._build_response(400, serializer_data.errors)
 
         except Exception as e:
             return self._build_response(500, {'error': f'Error de sistema: {e}'})

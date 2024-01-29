@@ -292,8 +292,9 @@ class TestUsuarioController(TestCase):
         _, response = self.controller.set_password_user(
             id=100,
             password='password',
-            password2='password2'
+            password2='password'
         )
+        print(response)
         self.assertEqual(_, 404)
         self.assertTrue(isinstance(response, (dict, ReturnDict)))
         self.assertIn('error', response)
@@ -372,7 +373,7 @@ class TestUsuarioController(TestCase):
             password=10,
             password2=True
         )
-        self.assertEqual(_, 500)
+        self.assertEqual(_, 400)
         self.assertTrue(isinstance(response, (dict, ReturnDict)))
 
     def test_update_email_user(self):
@@ -465,9 +466,11 @@ class TestUsuarioController(TestCase):
             email=33,
             password=False
         )
-        self.assertEqual(_, 500)
+        print(response)
+        self.assertEqual(_, 400)
         self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        self.assertIn('email', response)
+        self.assertIn('password', response)
 
     def test_update_username_user(self):
         """
@@ -512,11 +515,13 @@ class TestUsuarioController(TestCase):
         """
         Caso de fallo, id invalido
         """
+        nuevo_username_valido += '10'
         id = usuario_nuevo.id
         _, response = self.controller.update_username_user(
             id=100,
             username=nuevo_username_valido,
         )
+        print(response)
         self.assertEqual(_, 404)
         self.assertTrue(isinstance(response, (dict, ReturnDict)))
         self.assertIn('error', response)
@@ -524,7 +529,7 @@ class TestUsuarioController(TestCase):
         """
         Caso de fallo, datos totalmente invlaidos
         """
-        username_invalido = True
+        username_invalido = 'usuario_nuevo_id'
         id = 'usuario_nuevo.id'
         _, response = self.controller.update_username_user(
             id=id,

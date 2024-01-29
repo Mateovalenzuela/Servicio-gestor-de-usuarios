@@ -154,8 +154,9 @@ class TestPerfilController(TestCase):
             id=id,
             nombre='leo',
             apellido='messi',
-            fecha_nacimiento=datetime.datetime.now().date() + datetime.timedelta(days=100),
+            fecha_nacimiento=datetime.datetime.now().date() - datetime.timedelta(days=100),
         )
+        print(response)
         self.assertEqual(_, 500)
         self.assertTrue(isinstance(response, (dict, ReturnDict)))
         self.assertIn('error', response)
@@ -240,9 +241,9 @@ class TestPerfilController(TestCase):
         id = user.id
         _, response = self.controller.update_perfil_to_user(
             user_id=True,
-            nombre='self.valid_perfil_data2[]',
-            apellido='self.valid_perfil_data2['']',
-            fecha_nacimiento='self.valid_perfil_data2[]'
+            nombre=self.valid_perfil_data2['nombre'],
+            apellido=self.valid_perfil_data2['apellido'],
+            fecha_nacimiento=self.valid_perfil_data2['fecha_nacimiento']
         )
         print(response)
         self.assertEqual(_, 500)

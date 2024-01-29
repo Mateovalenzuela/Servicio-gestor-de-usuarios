@@ -81,9 +81,6 @@ class UsuarioController:
 
     def set_password_user(self, id: int, password: str, password2: str):
         try:
-            user = self._get_object(id)
-            if user is None:
-                return self._build_response(404, {'error': "Usuario no encontrado"})
 
             password_data = {
                 "password": password,
@@ -91,6 +88,11 @@ class UsuarioController:
             }
             password_serializer = PasswordSerializer(data=password_data)
             if password_serializer.is_valid():
+
+                user = self._get_object(id)
+                if user is None:
+                    return self._build_response(404, {'error': "Usuario no encontrado"})
+
                 user.set_password(password_serializer.validated_data['password'])
                 user.save()
                 return self._build_response(200, {'message': 'Contraseña Actualizada'})
@@ -102,9 +104,6 @@ class UsuarioController:
 
     def update_email_user(self, id: int, email: str, password: str):
         try:
-            user = self._get_object(id)
-            if user is None:
-                return self._build_response(404, {'error': "Usuario no encontrado"})
 
             data = {"email": email, "password": password}
 
@@ -112,6 +111,11 @@ class UsuarioController:
             serializer = usuario_serializer(data=data, partial=True)
 
             if serializer.is_valid():
+
+                user = self._get_object(id)
+                if user is None:
+                    return self._build_response(404, {'error': "Usuario no encontrado"})
+
                 # valída que la contraseña ingresada sea la del usuario a actualizar
                 valid_password = user.check_password(serializer.validated_data['password'])
 
@@ -132,17 +136,20 @@ class UsuarioController:
 
     def update_username_user(self, id: int, username: str):
         try:
+            data = {"username": username}
+
+            # valida los datos
+            serializer_data = self._serializer_class(data=data, partial=True)
+            if not serializer_data.is_valid():
+                return self._build_response(400, serializer_data.errors)
+
             user = self._get_object(id)
             if user is None:
                 return self._build_response(404, {'error': "Usuario no encontrado"})
 
-            data = {"username": username}
-
-            serializer = self._serializer_class(user, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return self._build_response(200, {'message': 'Username Actualizado'})
-            return self._build_response(400, serializer.errors)
+            user.username = serializer_data.validated_data['username']
+            user.save()
+            return self._build_response(200, {'message': 'Username Actualizado'})
 
         except Exception as e:
             return self._build_response(500, {'error': f'Error de sistema: {e}'})
