@@ -1,10 +1,10 @@
 from django.test import TestCase
 from rest_framework.utils.serializer_helpers import ReturnDict
-from ..controllers.AuthenticationController import AuthenticationController
+from ..services.AuthenticationService import AuthenticationService
 from ..models import Usuario
 
 
-class TestAuthenticationController(TestCase):
+class TestAuthenticationSercive(TestCase):
     def setUp(self):
 
         self.valid_user_data = {
@@ -19,7 +19,7 @@ class TestAuthenticationController(TestCase):
             'password': 'test1234'
         }
 
-        self.controller = AuthenticationController()
+        self.controller = AuthenticationService()
 
     def crear_usuario(self):
         # crea un usuario

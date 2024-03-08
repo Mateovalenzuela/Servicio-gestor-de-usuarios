@@ -1,10 +1,10 @@
 from django.test import TestCase
 from rest_framework.utils.serializer_helpers import ReturnDict
-from ..controllers.JWTController import JWTController
+from ..services.JWTService import JWTService
 from ..models import Usuario
 
 
-class TestJWTController(TestCase):
+class TestJWTService(TestCase):
     def setUp(self):
 
         self.valid_user_data = {
@@ -19,7 +19,7 @@ class TestJWTController(TestCase):
             'password': 'test1234'
         }
 
-        self.controller = JWTController()
+        self.controller = JWTService()
 
     def crear_usuario(self):
         # crea un usuario

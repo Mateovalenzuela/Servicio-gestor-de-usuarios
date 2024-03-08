@@ -3,7 +3,7 @@ from django.conf import settings
 from ..serializers import CustomTokenObtainPairSerializer
 
 
-class JWTController:
+class JWTService:
 
     def __init__(self):
         self._serializer_class = CustomTokenObtainPairSerializer

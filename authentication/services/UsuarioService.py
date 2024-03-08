@@ -1,7 +1,7 @@
 from ..serializers import UsuarioSerializer, PasswordSerializer
 
 
-class UsuarioController:
+class UsuarioService:
 
     def __init__(self):
         self._model = UsuarioSerializer.Meta.model
@@ -51,6 +51,9 @@ class UsuarioController:
 
     def list_one_user(self, id: int):
         try:
+            # convertir id a int
+            id = int(id)
+
             usuario = self._get_object(id)
             if usuario:
                 usuario_serializer = self._serializer_class(usuario)
@@ -81,6 +84,8 @@ class UsuarioController:
 
     def set_password_user(self, id: int, password: str, password2: str):
         try:
+            # convertir id a int
+            id = int(id)
 
             password_data = {
                 "password": password,
@@ -104,6 +109,9 @@ class UsuarioController:
 
     def update_email_user(self, id: int, email: str, password: str):
         try:
+            # convertir id a int
+            id = int(id)
+
 
             data = {"email": email, "password": password}
 
@@ -136,6 +144,9 @@ class UsuarioController:
 
     def update_username_user(self, id: int, username: str):
         try:
+            # convertir id a int
+            id = int(id)
+
             data = {"username": username}
 
             # valida los datos
@@ -156,6 +167,9 @@ class UsuarioController:
 
     def delete_user(self, id: int):
         try:
+            # convertir id a int
+            id = int(id)
+
             updated_rows = self._model.objects.filter(id=id, is_active=True, is_superuser=False).update(is_active=False)
             if updated_rows == 1:
                 return self._build_response(200, {'message': 'Usuario eliminado'})

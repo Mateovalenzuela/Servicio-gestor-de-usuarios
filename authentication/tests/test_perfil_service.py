@@ -2,11 +2,11 @@ import datetime
 from django.test import TestCase, Client
 from rest_framework import status
 from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
-from ..controllers.PerfilController import PerfilController
+from ..services.PerfilService import PerfilService
 from ..models import Usuario, Perfil
 
 
-class TestPerfilController(TestCase):
+class TestPerfilService(TestCase):
     def setUp(self):
         self.valid_user_data = {
             'username': 'test10',
@@ -32,7 +32,7 @@ class TestPerfilController(TestCase):
             'fecha_nacimiento': datetime.datetime.now().date() - datetime.timedelta(days=10),
         }
 
-        self.controller = PerfilController()
+        self.controller = PerfilService()
 
     def crear_usuario(self):
         # crea un usuario
@@ -238,9 +238,9 @@ class TestPerfilController(TestCase):
         Caso de fallo: id totalmente invalido
         """
 
-        id = user.id
+
         _, response = self.controller.update_perfil_to_user(
-            user_id=True,
+            user_id='True',
             nombre=self.valid_perfil_data2['nombre'],
             apellido=self.valid_perfil_data2['apellido'],
             fecha_nacimiento=self.valid_perfil_data2['fecha_nacimiento']

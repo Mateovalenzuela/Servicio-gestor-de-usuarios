@@ -1,11 +1,11 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from ..serializers import CustomTokenObtainPairSerializer
-from .UsuarioController import UsuarioController
-from .JWTController import JWTController
+from .UsuarioService import UsuarioService
+from .JWTService import JWTService
 
 
-class AuthenticationController:
+class AuthenticationService:
     def __init__(self):
         self._token_serializer_class = CustomTokenObtainPairSerializer
 
@@ -23,7 +23,7 @@ class AuthenticationController:
             )  # devuelve un bool si existe o no un usuario para esas credenciales
 
             if user:
-                controller = JWTController()
+                controller = JWTService()
                 status, data = controller.create_token_for_user(
                     email=email,
                     password=password
@@ -45,7 +45,7 @@ class AuthenticationController:
                     400, {'error': 'No existe este usuario'}
                 )
 
-            controller = UsuarioController()
+            controller = UsuarioService()
             user = controller.get_object_user(user_id)
 
             if user:

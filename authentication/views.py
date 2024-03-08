@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status as st, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .mixins import LoginAndIsOwnerMixin, AllowAny, IsAuthenticated
-from .controllers.UsuarioController import UsuarioController
-from .controllers.PerfilController import PerfilController
-from .controllers.AuthenticationController import AuthenticationController
-from .controllers.JWTController import JWTController
+from .services.UsuarioService import UsuarioService
+from .services.PerfilService import PerfilService
+from .services.AuthenticationService import AuthenticationService
+from .services.JWTService import JWTService
 
 
 # Create your views here.
@@ -30,7 +30,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :param request:
         :return: Lista vacía o Lista con todos los usuarios
         """
-        status, data = UsuarioController().list_all_users()
+        status, data = UsuarioService().list_all_users()
         if status == 200:
             return Response(data, status=st.HTTP_200_OK)
         else:
@@ -45,7 +45,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :param pk: int
         :return: El usuario (id, username, password, email, first_name, last_name) o error: usuario no encontrado
         """
-        controller = UsuarioController()
+        controller = UsuarioService()
         status, data = controller.list_one_user(pk)
         if status == 200:
             return Response(data, status=st.HTTP_200_OK)
@@ -66,7 +66,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         username = request.data.get('username', None)
         password = request.data.get('password', None)
         email = request.data.get('email', None)
-        status, data = UsuarioController().create_user(
+        status, data = UsuarioService().create_user(
             username=username, password=password, email=email
         )
 
@@ -100,7 +100,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         fecha_nacimiento = request.data.get('fecha_nacimiento', None)
         imagen = request.data.get('imagen', None)
 
-        controller = PerfilController()
+        controller = PerfilService()
 
         status, data = controller.add_perfil_to_user(
             id=pk,
@@ -139,7 +139,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
 
         username = request.data.get('username', None)
 
-        controller = UsuarioController()
+        controller = UsuarioService()
 
         status, data = controller.update_username_user(
             id=pk,
@@ -173,10 +173,10 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         """
         nombre = request.data.get('nombre', None)
         apellido = request.data.get('apellido', None)
-        fecha_nacimeinto = request.data.get('fecha_nacimeinto', None)
+        fecha_nacimeinto = request.data.get('fecha_nacimiento', None)
         imagen = request.data.get('imagen', None)
 
-        controller = PerfilController()
+        controller = PerfilService()
         status, data = controller.update_perfil_to_user(
             user_id=pk,
             nombre=nombre,
@@ -219,7 +219,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         password = request.data.get('password', None)
         password2 = request.data.get('password2', None)
 
-        status, data = UsuarioController().set_password_user(
+        status, data = UsuarioService().set_password_user(
             id=pk,
             password=password,
             password2=password2
@@ -258,7 +258,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         email = request.data.get('email', None)
         password = request.data.get('password', None)
 
-        status, data = UsuarioController().update_email_user(
+        status, data = UsuarioService().update_email_user(
             id=pk,
             email=email,
             password=password
@@ -295,7 +295,7 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :param pk: int
         :return: message, Usuario eliminado. O error: Usuario no encontrado.
         """
-        status, data = UsuarioController().delete_user(
+        status, data = UsuarioService().delete_user(
             id=pk
         )
 
@@ -321,7 +321,7 @@ class Login(TokenObtainPairView):
         password = request.data.get('password', None)
         email = request.data.get('email', None)
 
-        controller = AuthenticationController()
+        controller = AuthenticationService()
         status, data = controller.login(
             email=email,
             password=password
@@ -353,7 +353,7 @@ class Logout(GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         id = request.user.id or 0
-        controller = AuthenticationController()
+        controller = AuthenticationService()
 
         status, data = controller.logout(user_id=id)
 
@@ -387,6 +387,6 @@ class VeriifcarTokenView(GenericAPIView):
     def get(self, request):
         token = request.data.get('access_token', None)
 
-        controller = JWTController()
+        controller = JWTService()
         response = controller.validate_token(token)
         return Response({'access_token': response}, status=status.HTTP_200_OK)

@@ -4,7 +4,7 @@ from ..models import Usuario, Perfil
 
 # Create your tests here.
 
-class UsuarioTestCase(TestCase):
+class TestLoginAPI(TestCase):
 
     def setUp(self):
         self.client = Client()

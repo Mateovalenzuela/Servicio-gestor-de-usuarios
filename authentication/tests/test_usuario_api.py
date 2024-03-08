@@ -3,7 +3,7 @@ from ..models import Usuario, Perfil
 from ..serializers import UsuarioSerializer
 
 
-class TestUsuarioViewSet(TestCase):
+class TestUsuarioAPI(TestCase):
     def setUp(self):
         self.client = Client()
         self.url_api_usuario = '/api/usuario/'
@@ -25,6 +25,7 @@ class TestUsuarioViewSet(TestCase):
         self.data_perfil_user_1 = {
             "nombre": 'Leo',
             "apellido": 'Messi',
+            'fecha_nacimiento': '2020-05-21'
         }
 
         self.data_user_1 = {
@@ -36,6 +37,7 @@ class TestUsuarioViewSet(TestCase):
         self.data_perfil_user_2 = {
             "nombre": 'Luis',
             "apellido": 'Suarez',
+            "fecha_nacimiento": '2000-02-27'
         }
 
         self.data_user_1 = {
@@ -127,6 +129,7 @@ class TestUsuarioViewSet(TestCase):
             headers=headers,
             data=self.data_perfil_user_1
         )
+        print(response.json())
         self.assertEquals(response.status_code, 201)
 
         """
@@ -299,13 +302,18 @@ class TestUsuarioViewSet(TestCase):
         Caso de exito: se agrega un perfil a un usuario y se actualiza el perfil agregado.
         """
         # se agrega un perfil al usuario creado anteriormente
-        data_perfil = {'nombre': 'UsuarioDeTest', 'apellido': 'UsuarioDeTest'}
+        data_perfil = {
+            'nombre': 'UsuarioDeTest',
+            'apellido': 'UsuarioDeTest',
+            'fecha_nacimiento': '2000-10-01'
+        }
         path = f'{self.url_api_usuario}{id}/add_perfil/'
         response = self.client.post(
             path=path,
             headers=headers,
             data=data_perfil
         )
+        print(response.json())
         self.assertEquals(response.status_code, 201)
 
         # se actualizan los datos de perfil
@@ -316,6 +324,7 @@ class TestUsuarioViewSet(TestCase):
             data=data_perfil,
             content_type='application/json',  # Establecer tipo de contenido
         )
+        print(response.json())
         self.assertEquals(response.status_code, 200)
 
         # obtener usuario actualizado

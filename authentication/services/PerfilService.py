@@ -1,8 +1,8 @@
 from ..serializers import PerfilSerializer
-from .UsuarioController import UsuarioController
+from .UsuarioService import UsuarioService
 
 
-class PerfilController:
+class PerfilService:
     def __init__(self):
         self._model = PerfilSerializer.Meta.model
         self._serializer_class = PerfilSerializer
@@ -32,6 +32,9 @@ class PerfilController:
 
     def add_perfil_to_user(self, id: int, nombre, apellido, fecha_nacimiento):
         try:
+            # convertir id a int
+            id = int(id)
+
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
@@ -43,7 +46,7 @@ class PerfilController:
 
             if serializer.is_valid():
 
-                usuario = UsuarioController().get_object_user(id)
+                usuario = UsuarioService().get_object_user(id)
                 if usuario is None:
                     return self._build_response(404, {'error': 'Usuario no encontrado'})
 
@@ -60,6 +63,9 @@ class PerfilController:
 
     def update_perfil_to_user(self, user_id: id, nombre: str, apellido: str, fecha_nacimiento):
         try:
+            # convertir id a int
+            user_id = int(user_id)
+
             data_perfil = {
                 'nombre': nombre,
                 'apellido': apellido,
@@ -71,7 +77,7 @@ class PerfilController:
 
             if serializer_data.is_valid():
 
-                usuario_controller = UsuarioController()
+                usuario_controller = UsuarioService()
                 usuario = usuario_controller.get_object_user(user_id)
                 if usuario is None:
                     return self._build_response(404, {'error': 'Usuario no encontrado'})
