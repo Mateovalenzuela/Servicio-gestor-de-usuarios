@@ -13,6 +13,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = {
+            'id': instance.id,
             'username': instance.username,
             'email': instance.email,
         }
@@ -20,7 +21,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         if hasattr(instance, 'perfil'):
             representation['perfil'] = {
                 'nombre': instance.perfil.nombre,
-                'apellido': instance.perfil.apellido
+                'apellido': instance.perfil.apellido,
+                'fecha_nacimiento': instance.perfil.fecha_nacimiento
             }
 
         return representation
