@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status as st, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .mixins import LoginAndIsOwnerMixin, AllowAny, IsAuthenticated
-from .services.UsuarioService import UsuarioService
+from .services.UsuarioService import UsuarioService, UsuarioSerializer
 from .services.PerfilService import PerfilService
 from .services.AuthenticationService import AuthenticationService
 from .services.JWTService import JWTService
@@ -15,6 +15,10 @@ from .services.JWTService import JWTService
 
 
 class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
+
+    serializer_class = UsuarioSerializer
+    model = UsuarioSerializer.Meta.model
+    queryset = UsuarioSerializer.Meta.model.objects.all()
     def get_permissions(self):
         # Aplicar el mixin a todas las vistas excepto las de la lista
         if self.action in ['list', 'create']:
