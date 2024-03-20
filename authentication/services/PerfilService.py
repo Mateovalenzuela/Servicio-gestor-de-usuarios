@@ -1,4 +1,5 @@
 from ..serializers import PerfilSerializer
+from ..responses import ErrorResponse, SuccessResponse
 from .UsuarioService import UsuarioService
 
 
@@ -24,12 +25,6 @@ class PerfilService:
             return self._model.objects.filter(is_active=True, is_superuser=False)
         return self._queryset
 
-    def _get_serializer_class(self, data=None):
-        return self._serializer_class(data=data)
-
-    def _build_response(self, status, data):
-        return status, data
-
     def add_perfil_to_user(self, id: int, nombre, apellido, fecha_nacimiento):
         try:
             # convertir id a int
@@ -42,24 +37,26 @@ class PerfilService:
             }
 
             # serializa los datos del perfil
-            serializer = self._get_serializer_class(data=data_perfil)
+            serializer = self._serializer_class(data=data_perfil)
 
             if serializer.is_valid():
 
                 usuario = UsuarioService().get_object_user(id)
                 if usuario is None:
-                    return self._build_response(404, {'error': 'Usuario no encontrado'})
+                    return ErrorResponse.user_not_found()
 
                 # Verificar si ya existe un perfil para el usuario
                 if hasattr(usuario, 'perfil'):
-                    return self._build_response(400, {'message': 'Ya existe un perfil para este usuario.'})
+                    error = {'message': 'Ya existe un perfil para este usuario.'}
+                    return ErrorResponse.bad_request(errors=error)
 
                 serializer.save(usuario=usuario)
-                return self._build_response(200, {'message': 'Perfil Agregado a usuario'})
-            return self._build_response(400, serializer.errors)
+                message = {'message': 'Perfil Agregado a usuario'}
+                return SuccessResponse.ok(data=message)
+            return ErrorResponse.bad_request(errors=serializer.errors)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def update_perfil_to_user(self, user_id: id, nombre: str, apellido: str, fecha_nacimiento):
         try:
@@ -80,22 +77,21 @@ class PerfilService:
                 usuario_controller = UsuarioService()
                 usuario = usuario_controller.get_object_user(user_id)
                 if usuario is None:
-                    return self._build_response(404, {'error': 'Usuario no encontrado'})
+                    return ErrorResponse.user_not_found()
 
                 # Verificar si el usuario no tiene datos de perfil
                 if not hasattr(usuario, 'perfil'):
-                    return self._build_response(
-                        404, {'error': 'El usuario que desea actualizar no tiene datos de perfil'}
-                    )
+                    return ErrorResponse.perfil_not_found()
 
                 usuario.perfil.nombre = serializer_data.validated_data['nombre']
                 usuario.perfil.apellido = serializer_data.validated_data['apellido']
                 usuario.perfil.fecha_nacimiento = serializer_data.validated_data['fecha_nacimiento']
                 usuario.perfil.save()
 
-                return self._build_response(200, {'message': 'Perfil actualizado'})
+                message = {'message': 'Perfil actualizado'}
+                return SuccessResponse.ok(data=message)
 
-            return self._build_response(400, serializer_data.errors)
+            return ErrorResponse.bad_request(errors=serializer_data.errors)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()

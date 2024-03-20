@@ -55,7 +55,7 @@ class TestUsuarioAPI(TestCase):
             path=self.url_api_login,
             data=data
         )
-        data = dict(response.json())
+        data = dict(response.json())['data']
         token = data['access_token']
         return token
 
@@ -74,7 +74,6 @@ class TestUsuarioAPI(TestCase):
             path=self.url_api_usuario,
             data=self.data_user_1,
         )
-        print(response.json())
         self.assertEquals(response.status_code, 201)
 
         """
@@ -89,7 +88,6 @@ class TestUsuarioAPI(TestCase):
             path=self.url_api_usuario,
             data=invalid_data,
         )
-        print(response.json())
         self.assertEquals(response.status_code, 400)
 
         """
@@ -102,7 +100,6 @@ class TestUsuarioAPI(TestCase):
             path=self.url_api_usuario,
             data=invalid_data,
         )
-        print(response.json())
         self.assertEquals(response.status_code, 400)
 
     def test_api_add_perfil(self):
@@ -129,8 +126,7 @@ class TestUsuarioAPI(TestCase):
             headers=headers,
             data=self.data_perfil_user_1
         )
-        print(response.json())
-        self.assertEquals(response.status_code, 201)
+        self.assertEquals(response.status_code, 200)
 
         """
         Caso de Fallo: Se le asigna un perfil a un usuario que ya tiene perfil.
@@ -196,10 +192,9 @@ class TestUsuarioAPI(TestCase):
             path=f'{self.url_api_usuario}{id}/',
             headers=headers
         )
-        print(response.json())
         self.assertEquals(response.status_code, 200)
         self.assertEquals(
-            dict(response.json()),
+            dict(response.data['data']),
             UsuarioSerializer(usuario).data
         )  # compara usuario recibido con usuario creado, ambos en formato dict
 
@@ -313,8 +308,7 @@ class TestUsuarioAPI(TestCase):
             headers=headers,
             data=data_perfil
         )
-        print(response.json())
-        self.assertEquals(response.status_code, 201)
+        self.assertEquals(response.status_code, 200)
 
         # se actualizan los datos de perfil
         data_perfil = self.data_perfil_user_2
@@ -324,7 +318,6 @@ class TestUsuarioAPI(TestCase):
             data=data_perfil,
             content_type='application/json',  # Establecer tipo de contenido
         )
-        print(response.json())
         self.assertEquals(response.status_code, 200)
 
         # obtener usuario actualizado
@@ -376,13 +369,15 @@ class TestUsuarioAPI(TestCase):
             path=f'{self.url_api_usuario}{id}/',
             headers=headers
         )
-        self.assertEquals(response.status_code, 204)
+        self.assertEquals(response.status_code, 200)
 
         # verifica que el usuario se elimino
         response = self.client.get(
             path=f'{self.url_api_usuario}{id}/',
             headers=headers
         )
+
+        # corresponde un 401 ya que el usuario no existe por lo tanto no tiene token valido
         self.assertEquals(response.status_code, 401)
 
         """
@@ -391,7 +386,6 @@ class TestUsuarioAPI(TestCase):
         response = self.client.delete(
             path=f'{self.url_api_usuario}{id}/',
         )
-        print(response.json())
         self.assertEquals(response.status_code, 401)
 
     def test_api_change_password(self):

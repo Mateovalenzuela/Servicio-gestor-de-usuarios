@@ -15,10 +15,10 @@ from .services.JWTService import JWTService
 
 
 class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
-
     serializer_class = UsuarioSerializer
     model = UsuarioSerializer.Meta.model
     queryset = UsuarioSerializer.Meta.model.objects.all()
+
     def get_permissions(self):
         # Aplicar el mixin a todas las vistas excepto las de la lista
         if self.action in ['list', 'create']:
@@ -34,11 +34,8 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :param request:
         :return: Lista vacía o Lista con todos los usuarios
         """
-        status, data = UsuarioService().list_all_users()
-        if status == 200:
-            return Response(data, status=st.HTTP_200_OK)
-        else:
-            return Response({'error': 'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR)
+        response = UsuarioService().list_all_users()
+        return response
 
     def retrieve(self, request, pk=None):
         """
@@ -50,13 +47,8 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :return: El usuario (id, username, password, email, first_name, last_name) o error: usuario no encontrado
         """
         controller = UsuarioService()
-        status, data = controller.list_one_user(pk)
-        if status == 200:
-            return Response(data, status=st.HTTP_200_OK)
-        elif status == 400:
-            return Response({'error': 'Usuario no encontrado'}, status=st.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'error': f'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR)
+        response = controller.list_one_user(pk)
+        return response
 
     def create(self, request):
         """
@@ -70,23 +62,11 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         username = request.data.get('username', None)
         password = request.data.get('password', None)
         email = request.data.get('email', None)
-        status, data = UsuarioService().create_user(
+
+        response = UsuarioService().create_user(
             username=username, password=password, email=email
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Usuario creado'}, status=st.HTTP_201_CREATED
-            )
-        elif status == 400:
-            return Response({
-                'message': 'Error al registrarse',
-                'errors': data
-            }, status=st.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(
-                {'error': f'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     @action(detail=True, methods=['post'], url_path='add_perfil')
     def add_perfil_to_user(self, request, pk=None):
@@ -104,31 +84,15 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         fecha_nacimiento = request.data.get('fecha_nacimiento', None)
         imagen = request.data.get('imagen', None)
 
-        controller = PerfilService()
+        service = PerfilService()
 
-        status, data = controller.add_perfil_to_user(
+        response = service.add_perfil_to_user(
             id=pk,
             nombre=nombre,
             apellido=apellido,
             fecha_nacimiento=fecha_nacimiento,
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Perfil Agregado a usuario'}, status=st.HTTP_201_CREATED
-            )
-        elif status == 400:
-            return Response(
-                data, status=st.HTTP_400_BAD_REQUEST
-            )
-        elif status == 404:
-            return Response(
-                data, status=st.HTTP_404_NOT_FOUND
-            )
-        else:
-            return Response(
-                {'error': f'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     @action(detail=True, methods=['patch'], url_path='update_username')
     def update_username(self, request, pk=None):
@@ -143,27 +107,13 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
 
         username = request.data.get('username', None)
 
-        controller = UsuarioService()
+        service = UsuarioService()
 
-        status, data = controller.update_username_user(
+        response = service.update_username_user(
             id=pk,
             username=username
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Username Actualizado'}, status=st.HTTP_200_OK
-            )
-        elif status == 400:
-            return Response({
-                'message': 'Error al actualizar el username',
-                'errors': data
-            }, status=st.HTTP_400_BAD_REQUEST
-            )
-        else:
-            return Response(
-                {'error': f'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     @action(detail=True, methods=['put'], url_path='update_perfil')
     def update_perfil(self, request, pk=None):
@@ -180,34 +130,14 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         fecha_nacimeinto = request.data.get('fecha_nacimiento', None)
         imagen = request.data.get('imagen', None)
 
-        controller = PerfilService()
-        status, data = controller.update_perfil_to_user(
+        service = PerfilService()
+        response = service.update_perfil_to_user(
             user_id=pk,
             nombre=nombre,
             apellido=apellido,
             fecha_nacimiento=fecha_nacimeinto,
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Perfil actualizado'}, status=st.HTTP_200_OK
-            )
-        elif status == 400:
-            return Response({
-                'message': 'Error al actualizar el perfil de usuario',
-                'errors': data
-            }, status=st.HTTP_400_BAD_REQUEST
-            )
-        elif status == 404:
-            return Response(
-                {'error': 'El usuario que desea actualizar no tiene datos de perfil'},
-                status=st.HTTP_400_BAD_REQUEST
-            )
-        else:
-            return Response(
-                {'error': f'Servicio no disponible:'},
-                status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     @action(detail=True, methods=['post'], url_path='set_password')
     def set_password(self, request, pk=None):
@@ -223,30 +153,12 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         password = request.data.get('password', None)
         password2 = request.data.get('password2', None)
 
-        status, data = UsuarioService().set_password_user(
+        response = UsuarioService().set_password_user(
             id=pk,
             password=password,
             password2=password2
         )
-        if status == 200:
-            return Response(
-                {'message': 'Contraseña Actualizada'}, status=st.HTTP_200_OK
-            )
-        elif status == 400:
-            return Response({
-                'message': 'Error al actualizar la contraseña',
-                'errors': data},
-                status=st.HTTP_400_BAD_REQUEST
-            )
-        elif status == 404:
-            return Response(
-                {'errors': 'Usuario no encontrado'},
-                status=st.HTTP_404_NOT_FOUND
-            )
-        else:
-            return Response(
-                {'error': 'Servicio no disponible'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     @action(detail=True, methods=['post'], url_path='update_email')
     def update_email(self, request, pk=None):
@@ -262,33 +174,12 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         email = request.data.get('email', None)
         password = request.data.get('password', None)
 
-        status, data = UsuarioService().update_email_user(
+        response = UsuarioService().update_email_user(
             id=pk,
             email=email,
             password=password
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Email Actualizado'}, status=st.HTTP_200_OK
-            )
-        elif status == 400:
-            return Response(
-                {
-                    'message': 'Error al actualizar el email',
-                    'errors': data},
-                status=st.HTTP_400_BAD_REQUEST
-            )
-        elif status == 401:
-            return Response(
-                {'error': 'La contraseña es invalida'},
-                status=st.HTTP_401_UNAUTHORIZED
-            )
-        else:
-            return Response(
-                {'error': 'Servicio no disponible'},
-                status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
     def destroy(self, request, pk=None):
         """
@@ -299,22 +190,10 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         :param pk: int
         :return: message, Usuario eliminado. O error: Usuario no encontrado.
         """
-        status, data = UsuarioService().delete_user(
+        response = UsuarioService().delete_user(
             id=pk
         )
-
-        if status == 200:
-            return Response(
-                {'message': 'Usuario eliminado'}, status=st.HTTP_204_NO_CONTENT
-            )
-        elif status == 404:
-            return Response(
-                {'error': 'Usuario no encontrado'}, status=st.HTTP_404_NOT_FOUND
-            )
-        else:
-            return Response(
-                {'error': 'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
 
 class Login(TokenObtainPairView):
@@ -325,30 +204,12 @@ class Login(TokenObtainPairView):
         password = request.data.get('password', None)
         email = request.data.get('email', None)
 
-        controller = AuthenticationService()
-        status, data = controller.login(
+        service = AuthenticationService()
+        response = service.login(
             email=email,
             password=password
         )
-
-        if status == 200:
-            return Response(
-                data,
-                status=st.HTTP_200_OK,
-                content_type='application/json'
-            )
-
-        elif status == 400:
-            Response(
-                {'error': 'Contraseña o nombre de usuario incorrectos'},
-                status=st.HTTP_400_BAD_REQUEST,
-                content_type='application/json'
-            )
-        else:
-            return Response(
-                {'error': f'Servicio no disponible'},
-                status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
 
 class Logout(GenericAPIView):
@@ -357,26 +218,16 @@ class Logout(GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         id = request.user.id or 0
-        controller = AuthenticationService()
 
-        status, data = controller.logout(user_id=id)
+        service = AuthenticationService()
+        response = service.logout(user_id=id)
 
-        if status == 200:
-            return Response(
-                {'message': 'Sesion cerrada correctamente'}, status=st.HTTP_200_OK
-            )
-        elif status == 400:
-            return Response(
-                {'error': 'No existe este usuario'}, status=st.HTTP_400_BAD_REQUEST
-            )
-        else:
-            return Response(
-                {'error': f'Servicio no disponible'}, status=st.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return response
 
 
 class ProtectedView(GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = None
 
     def get(self, request):
         try:
@@ -387,10 +238,11 @@ class ProtectedView(GenericAPIView):
 
 class VeriifcarTokenView(GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = None
 
     def get(self, request):
         token = request.data.get('access_token', None)
 
-        controller = JWTService()
-        response = controller.validate_token(token)
-        return Response({'access_token': response}, status=status.HTTP_200_OK)
+        service = JWTService()
+        response = service.validate_token(token)
+        return response

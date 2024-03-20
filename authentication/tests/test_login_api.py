@@ -66,7 +66,7 @@ class TestLoginAPI(TestCase):
         self.assertTrue(self.client.login(username=self.valid_user['email'], password=self.valid_user['password']))
 
     def test_api_logout(self):
-        data = dict(self.logged_user.json())
+        data = dict(self.logged_user.json())['data']
         token = data['access_token']
 
         response = self.client.post(
@@ -84,7 +84,7 @@ class TestLoginAPI(TestCase):
         self.assertEquals(response.status_code, 401)
 
     def test_api_protected_view(self):
-        data = dict(self.logged_user.json())
+        data = dict(self.logged_user.json())['data']
         token = data['access_token']
         response = self.client.get(
             path=f'/vista/',

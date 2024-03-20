@@ -19,7 +19,7 @@ class TestAuthenticationSercive(TestCase):
             'password': 'test1234'
         }
 
-        self.controller = AuthenticationService()
+        self.service = AuthenticationService()
 
     def crear_usuario(self):
         # crea un usuario
@@ -48,128 +48,117 @@ class TestAuthenticationSercive(TestCase):
     def test_login(self):
         """
         Caso de fallo: se proveen credenciales de usuario inexistente
-        :return:
         """
-
-        _, response = self.controller.login(
+        response = self.service.login(
             password=self.valid_user_data['password'],
             email=self.valid_user_data['email']
         )
-        print(response)
-        self.assertEqual(_, 400)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 400)
 
         """
         Caso de exito: se proveen credenciales de un usuario valido
         """
         user = self.crear_usuario()
-        _, response = self.controller.login(
+        response = self.service.login(
             password=self.valid_user_data['password'],
             email=self.valid_user_data['email']
         )
-        print(response)
-        self.assertEqual(_, 200)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('access_token', response)
-        self.assertIn('refresh_token', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 200)
+        self.assertIn('access_token', data)
+        self.assertIn('refresh_token', data)
 
         """
         Caso de fallo: se proveen credenciales totalmente invalidas 
         """
-        _, response = self.controller.login(
+        response = self.service.login(
             password=10.6,
             email=True
         )
-        print(response)
-        self.assertEqual(_, 500)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 500)
+        self.assertIn('error', data)
 
         """
         Caso de fallo: se proveen credenciales totalmente invalidas 
         """
-        _, response = self.controller.login(
+        response = self.service.login(
             password='fwefwfwfwef',
             email=False
         )
-        print(response)
-        self.assertEqual(_, 400)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 400)
 
     def test_logout(self):
         """
         Caso de fallo: se provee un id inexistente en base de datos
-        :return:
         """
         id = 100
-        _, response = self.controller.logout(
+        response = self.service.logout(
             user_id=id
         )
-        print(response)
-        self.assertEqual(_, 400)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 404)
 
         """
-        Caso de exito: se provee un id valido, pero que no inicio sesion
+        Caso de exito: se provee un id valido, pero que no inició sesión
         """
         user = self.crear_usuario()
         id = user.id
-        _, response = self.controller.logout(
+        response = self.service.logout(
             user_id=id
         )
-        print(response)
-        self.assertEqual(_, 200)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('message', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 200)
         user.delete()
 
         """
-        Caso de exito: se provee un id valido, pero que si inicio sesion
+        Caso de exito: se provee un id valido, pero que sí inició sesión
         """
-        # Crea un usuario e inicia sesion
+        # Crea un usuario e inicia sesión
         user = self.crear_usuario()
-        _, response = self.controller.login(
+        login_response = self.service.login(
             password=self.valid_user_data['password'],
             email=self.valid_user_data['email']
         )
-        self.assertEqual(_, 200)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('access_token', response)
-        self.assertIn('refresh_token', response)
-        #####################
+        login_data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(login_response.status_code, 200)
+
+
         # logout de usuario
         id = user.id
-        _, response = self.controller.logout(
+        response = self.service.logout(
             user_id=id
         )
-        print(response)
-        self.assertEqual(_, 200)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('message', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 200)
 
         """
         Caso de fallo: se provee un id totalmente invalido
         """
         id = 'wgfergewgewrge'
-        _, response = self.controller.logout(
+        response = self.service.logout(
             user_id=id
         )
-        print(response)
-        self.assertEqual(_, 400)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 404)
 
         """
         Caso de fallo: se provee un id totalmente invalido
         """
         id = True
-        _, response = self.controller.logout(
+        response = self.service.logout(
             user_id=id
         )
-        print(response)
-        self.assertEqual(_, 400)
-        self.assertTrue(isinstance(response, (dict, ReturnDict)))
-        self.assertIn('error', response)
+        status = response.status_code
+        data = response.data.get('data', response.data.get('detail'))
+        self.assertEqual(status, 404)

@@ -1,6 +1,7 @@
 import jwt
 from django.conf import settings
 from ..serializers import CustomTokenObtainPairSerializer
+from ..responses import ErrorResponse, SuccessResponse
 
 
 class JWTService:
@@ -8,21 +9,22 @@ class JWTService:
     def __init__(self):
         self._serializer_class = CustomTokenObtainPairSerializer
 
-    def _build_response(self, status, data):
-        return status, data
-
     def validate_token(self, token):
         try:
             # Verificar el token JWT con la clave pública RSA
             decoded_payload = jwt.decode(token, settings.SIMPLE_JWT['VERIFYING_KEY'], settings.SIMPLE_JWT['ALGORITHM'])
             usuario_id = decoded_payload.get('user_id')
-            return self._build_response(200, {'message': f'Token valido, user_id: {usuario_id}'})
+            message = f'Token valido, user_id: {usuario_id}'
+            return SuccessResponse.ok(message)
+
         except jwt.ExpiredSignatureError:
-            return self._build_response(400, {'error': f'Token expirado'})
+            return ErrorResponse.bad_request('Token expirado')
+
         except jwt.InvalidTokenError:
-            return self._build_response(400, {'error': f'Token no válido'})
+            return ErrorResponse.bad_request('Token no válido')
+
         except Exception as e:
-            return self._build_response(500, {'error': f'Servicio no disponible: {e}'})
+            return ErrorResponse.server_error()
 
     def create_token_for_user(self, password: str, email: str):
         try:
@@ -39,10 +41,11 @@ class JWTService:
                 # Obtener el token de acceso y de actualización
                 access_token = serializer.validated_data.get('access')
                 refresh_token = serializer.validated_data.get('refresh')
-                return self._build_response(
-                    200, {'access_token': access_token, 'refresh_token': refresh_token}
+                return SuccessResponse.ok(
+                    {'access_token': access_token, 'refresh_token': refresh_token}
                 )
             else:
-                return self._build_response(400, serializer.errors)
+                return ErrorResponse.bad_request(serializer.errors)
+
         except Exception as e:
-            return self._build_response(500, {'error': f'Servicio no disponible: {e}'})
+            return ErrorResponse.server_error()

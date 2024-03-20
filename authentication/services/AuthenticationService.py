@@ -3,6 +3,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from ..serializers import CustomTokenObtainPairSerializer
 from .UsuarioService import UsuarioService
 from .JWTService import JWTService
+from ..responses import SuccessResponse, ErrorResponse
 
 
 class AuthenticationService:
@@ -12,9 +13,6 @@ class AuthenticationService:
     def _get_serializer_class(self, data=None):
         return self._token_serializer_class(data=data)
 
-    def _build_response(self, status, data):
-        return status, data
-
     def login(self, password: str, email):
         try:
             user = authenticate(
@@ -23,41 +21,32 @@ class AuthenticationService:
             )  # devuelve un bool si existe o no un usuario para esas credenciales
 
             if user:
-                controller = JWTService()
-                status, data = controller.create_token_for_user(
+                service = JWTService()
+                response = service.create_token_for_user(
                     email=email,
                     password=password
                 )
-                return self._build_response(status, data)
+                return response
 
-            return self._build_response(
-                400, {'error': 'Contraseña o nombre de usuario incorrectos'}
-            )
+            return ErrorResponse.credentials_not_found()
+
         except Exception as e:
-            return self._build_response(
-                500, {'error': f'Servicio no disponible: {e}'}
-            )
+            return ErrorResponse.server_error()
 
     def logout(self, user_id: int):
         try:
             if not int == type(user_id):
-                return self._build_response(
-                    400, {'error': 'No existe este usuario'}
-                )
+                return ErrorResponse.not_found()
 
-            controller = UsuarioService()
-            user = controller.get_object_user(user_id)
+            service = UsuarioService()
+            user = service.get_object_user(user_id)
 
             if user:
                 # actualiza el token de refresh y lo manda a la lista negra
                 RefreshToken.for_user(user)
-                return self._build_response(
-                    200, {'message': 'Sesion cerrada correctamente'}
-                )
-            return self._build_response(
-                400, {'error': 'No existe este usuario'}
-            )
+                return SuccessResponse.ok('Sesion cerrada correctamente')
+
+            return ErrorResponse.user_not_found()
+
         except Exception as e:
-            return self._build_response(
-                500, {'error': f'Servicio no disponible: {e}'}
-            )
+            return ErrorResponse.server_error()

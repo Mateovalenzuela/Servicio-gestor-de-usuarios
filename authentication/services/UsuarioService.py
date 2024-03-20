@@ -1,4 +1,5 @@
 from ..serializers import UsuarioSerializer, PasswordSerializer
+from ..responses import SuccessResponse, ErrorResponse
 
 
 class UsuarioService:
@@ -28,26 +29,25 @@ class UsuarioService:
             return self._model.objects.filter(is_active=True, is_superuser=False)
         return self._queryset
 
-    def _get_serializer_class(self, data=None):
-        return self._serializer_class(data=data)
-
-    def _build_response(self, status, data):
-        return status, data
-
     def get_object_user(self, id: int):
         return self._get_object(id)
 
     def get_object_user_by_email(self, email: int):
-        return self._model.objects.get(email=email, is_active=True)
+        user = self._model.objects.get(email=email, is_active=True)
+        if user is None:
+            return ErrorResponse.user_not_found()
+
+        data = self._serializer_class(instance=user).data
+        return SuccessResponse.ok(data=data)
 
     def list_all_users(self):
         try:
             usuarios = self._get_queryset()
             usuarios_serializer = self._serializer_class
             data_ususarios = usuarios_serializer(usuarios, many=True)
-            return self._build_response(200, data_ususarios.data)
+            return SuccessResponse.ok(data=data_ususarios.data)
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def list_one_user(self, id: int):
         try:
@@ -58,11 +58,11 @@ class UsuarioService:
             if usuario:
                 usuario_serializer = self._serializer_class(usuario)
                 data_usuario = usuario_serializer.data
-                return self._build_response(200, data_usuario)
+                return SuccessResponse.ok(data=data_usuario)
             else:
-                return self._build_response(404, {'error': "Usuario no encontrado"})
+                return ErrorResponse.user_not_found()
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def create_user(self, username: str, password: str, email: str):
         try:
@@ -72,15 +72,16 @@ class UsuarioService:
                 "email": email
             }
 
-            usuario_serializer = self._get_serializer_class(usuario_data)
+            usuario_serializer = self._serializer_class(data=usuario_data)
             if usuario_serializer.is_valid():
                 usuario_serializer.save()
-                return self._build_response(200, {'message': 'Usuario creado'})
+                message = {'message': 'Usuario creado'}
+                return SuccessResponse.created(data=message)
             else:
-                return self._build_response(400, usuario_serializer.errors)
+                return ErrorResponse.bad_request(usuario_serializer.errors)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def set_password_user(self, id: int, password: str, password2: str):
         try:
@@ -96,22 +97,22 @@ class UsuarioService:
 
                 user = self._get_object(id)
                 if user is None:
-                    return self._build_response(404, {'error': "Usuario no encontrado"})
+                    return ErrorResponse.user_not_found()
 
                 user.set_password(password_serializer.validated_data['password'])
                 user.save()
-                return self._build_response(200, {'message': 'Contraseña Actualizada'})
+                message = {'message': 'Contraseña Actualizada'}
+                return SuccessResponse.ok(data=message)
             else:
-                return self._build_response(400, password_serializer.errors)
+                return ErrorResponse.bad_request(password_serializer.errors)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def update_email_user(self, id: int, email: str, password: str):
         try:
             # convertir id a int
             id = int(id)
-
 
             data = {"email": email, "password": password}
 
@@ -122,25 +123,26 @@ class UsuarioService:
 
                 user = self._get_object(id)
                 if user is None:
-                    return self._build_response(404, {'error': "Usuario no encontrado"})
+                    return ErrorResponse.user_not_found()
 
                 # valída que la contraseña ingresada sea la del usuario a actualizar
                 valid_password = user.check_password(serializer.validated_data['password'])
 
                 if not valid_password:
                     # La contraseña no ingresada no coincide con la del usuario
-                    return self._build_response(401, {'error': 'La contraseña es invalida'})
+                    return ErrorResponse.unauthorized()
 
                 # la contraseña es correcta
                 user.email = serializer.validated_data['email']
                 user.save()
-                return self._build_response(200, {'message': 'Email Actualizado'})
+                message = {'message': 'Email Actualizado'}
+                return SuccessResponse.ok(data=message)
             else:
                 # datos invalidos
-                return self._build_response(400, serializer.errors)
+                return ErrorResponse.bad_request(serializer.errors)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def update_username_user(self, id: int, username: str):
         try:
@@ -152,18 +154,19 @@ class UsuarioService:
             # valida los datos
             serializer_data = self._serializer_class(data=data, partial=True)
             if not serializer_data.is_valid():
-                return self._build_response(400, serializer_data.errors)
+                return ErrorResponse.bad_request(serializer_data.errors)
 
             user = self._get_object(id)
             if user is None:
-                return self._build_response(404, {'error': "Usuario no encontrado"})
+                return ErrorResponse.user_not_found()
 
             user.username = serializer_data.validated_data['username']
             user.save()
-            return self._build_response(200, {'message': 'Username Actualizado'})
+            message = {'message': 'Username Actualizado'}
+            return SuccessResponse.ok(data=message)
 
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
 
     def delete_user(self, id: int):
         try:
@@ -172,7 +175,8 @@ class UsuarioService:
 
             updated_rows = self._model.objects.filter(id=id, is_active=True, is_superuser=False).update(is_active=False)
             if updated_rows == 1:
-                return self._build_response(200, {'message': 'Usuario eliminado'})
-            return self._build_response(404, {'error': 'Usuario no encontrado'})
+                message = {'message': 'Usuario eliminado'}
+                return SuccessResponse.ok(data=message)
+            return ErrorResponse.user_not_found()
         except Exception as e:
-            return self._build_response(500, {'error': f'Error de sistema: {e}'})
+            return ErrorResponse.server_error()
