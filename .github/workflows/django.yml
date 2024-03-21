@@ -31,14 +31,14 @@ jobs:
         VERIFYING_KEY_NAME_FILE: ${{ secrets.VERIFYING_KEY_NAME_FILE }}
         ALGORITHM: ${{ secrets.ALGORITHM }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        DB_ENGINE: ${{ secrets.DB_ENGINE }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-        EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-        EMAIL_USE_SSL: ${{ secrets.EMAIL_USE_SSL }}
         EMAIL_RECEIVER_TEST: ${{ secrets.EMAIL_RECEIVER_TEST }}
+        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+        DB_ENGINE: ${{ env.DB_ENGINE }}
+        DB_NAME: ${{ env.DB_NAME }}
+        EMAIL_HOST: ${{ env.EMAIL_HOST }}
+        EMAIL_PORT: ${{ env.EMAIL_PORT }}
+        EMAIL_USE_SSL: ${{ env.EMAIL_USE_SSL }}
 
       run: |
         python manage.py test
