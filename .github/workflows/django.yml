@@ -30,13 +30,13 @@ jobs:
         printenv
     - name: Run Tests
       env:
-        SIGNING_KEY_NAME_FILE: ${{ secrets.SIGNING_KEY_NAME_FILE }}
-        VERIFYING_KEY_NAME_FILE: ${{ secrets.VERIFYING_KEY_NAME_FILE }}
-        ALGORITHM: ${{ secrets.ALGORITHM }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        EMAIL_RECEIVER_TEST: ${{ secrets.EMAIL_RECEIVER_TEST }}
-        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+        SIGNING_KEY_NAME_FILE: ${{ env.SIGNING_KEY_NAME_FILE }}
+        VERIFYING_KEY_NAME_FILE: ${{ env.VERIFYING_KEY_NAME_FILE }}
+        ALGORITHM: ${{ env.ALGORITHM }}
+        SECRET_KEY: ${{ env.SECRET_KEY }}
+        EMAIL_RECEIVER_TEST: ${{ env.EMAIL_RECEIVER_TEST }}
+        EMAIL_HOST_PASSWORD: ${{ env.EMAIL_HOST_PASSWORD }}
+        EMAIL_HOST_USER: ${{ env.EMAIL_HOST_USER }}
         DB_ENGINE: ${{ env.DB_ENGINE }}
         DB_NAME: ${{ env.DB_NAME }}
         EMAIL_HOST: ${{ env.EMAIL_HOST }}
