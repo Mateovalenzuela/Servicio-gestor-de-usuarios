@@ -7,41 +7,55 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  run-tests-develop:
     runs-on: ubuntu-latest
+    environment: develop
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.11]
+    env:
+        SIGNING_KEY_NAME_FILE: ${{ secrets.SIGNING_KEY_NAME_FILE }}
+        VERIFYING_KEY_NAME_FILE: ${{ secrets.VERIFYING_KEY_NAME_FILE }}
+        ALGORITHM: ${{ secrets.ALGORITHM }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        EMAIL_RECEIVER_TEST: ${{ secrets.EMAIL_RECEIVER_TEST }}
+        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+        DB_ENGINE: ${{ vars.DB_ENGINE }}
+        DB_NAME: ${{ vars.DB_NAME }}
+        EMAIL_HOST: ${{ vars.EMAIL_HOST }}
+        EMAIL_PORT: ${{ vars.EMAIL_PORT }}
+        EMAIL_USE_SSL: ${{ vars.EMAIL_USE_SSL }}
 
     steps:
     - uses: actions/checkout@v3
+    
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+        
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        
     - name: Mostrando variables de entorno
       run: |
-        printenv
+        echo "SIGNING_KEY_NAME_FILE: $SIGNING_KEY_NAME_FILE"
+        echo "VERIFYING_KEY_NAME_FILE: $VERIFYING_KEY_NAME_FILE"
+        echo "ALGORITHM: $ALGORITHM"
+        echo "SECRET_KEY: $SECRET_KEY"
+        echo "EMAIL_RECEIVER_TEST: $EMAIL_RECEIVER_TEST"
+        echo "EMAIL_HOST_PASSWORD: $EMAIL_HOST_PASSWORD"
+        echo "EMAIL_HOST_USER: $EMAIL_HOST_USER"
+        echo "DB_ENGINE: $DB_ENGINE"
+        echo "DB_NAME: $DB_NAME"
+        echo "EMAIL_HOST: $EMAIL_HOST"
+        echo "EMAIL_PORT: $EMAIL_PORT"
+        echo "EMAIL_USE_SSL: $EMAIL_USE_SSL"
+        
     - name: Run Tests
-      env:
-        SIGNING_KEY_NAME_FILE: ${{ env.SIGNING_KEY_NAME_FILE }}
-        VERIFYING_KEY_NAME_FILE: ${{ env.VERIFYING_KEY_NAME_FILE }}
-        ALGORITHM: ${{ env.ALGORITHM }}
-        SECRET_KEY: ${{ env.SECRET_KEY }}
-        EMAIL_RECEIVER_TEST: ${{ env.EMAIL_RECEIVER_TEST }}
-        EMAIL_HOST_PASSWORD: ${{ env.EMAIL_HOST_PASSWORD }}
-        EMAIL_HOST_USER: ${{ env.EMAIL_HOST_USER }}
-        DB_ENGINE: ${{ env.DB_ENGINE }}
-        DB_NAME: ${{ env.DB_NAME }}
-        EMAIL_HOST: ${{ env.EMAIL_HOST }}
-        EMAIL_PORT: ${{ env.EMAIL_PORT }}
-        EMAIL_USE_SSL: ${{ env.EMAIL_USE_SSL }}
-
       run: |
         python manage.py test
