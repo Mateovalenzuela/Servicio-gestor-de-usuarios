@@ -42,7 +42,7 @@ class TestUsuarioService(TestCase):
         Caso de exito: obtener un usuario con id valido
         """
         user = self.crear_usuario()
-        response = self.service.get_object_user(1)
+        response = self.service.get_object_user(user.id)
         self.assertEqual(response.id, user.id)
 
         """

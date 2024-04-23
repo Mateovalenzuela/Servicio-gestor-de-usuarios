@@ -76,7 +76,7 @@ class TestLoginAPI(TestCase):
         self.assertEquals(response.status_code, 200)
 
         # caso de fallo, token invalido
-        token = token[:-1] + 'x'
+        token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzODQ5Njk1LCJpYXQiOjE3MTM3NjMyOTUsImp0aSI6ImI2NWRhNTc2NGYyMzQ1Mjk4MmEyMjczOGU3MjNjYzY3IiwidXNlcl9pZCI6MX0.NaUZPJK0ie5WryDX1mGOu7eUQPs-p2kh__JVYxPBla61d76Tv114GpmDmkjnMr1YSc5aK3x7yDIzGKeMuWAcoSA_wczE5dtZ0LFmX3JPVC0zr31qmnZ75qcLJT193ZU6z4Y_42MYqX8Nr0B_MV3fZ6OkqVS7O2cOBfMNouuT3USLo8sqJ5qx19sB0NJW_A77ZI9X17ssV5TXEZQ_vNELcisvbo7c-d3JpghwANEohdZNzS_y39J5lPcZhDJ4BSmqRkt7fBqvpQQvrG42JnpFYtAhbaTpi99sXeBA0dLQdsMYMmdoWD4OmAvSX4Y2e4DrAq5u2q8xeab7OTUfV9'
         response = self.client.post(
             path=self.url_api_logout,
             headers={'Authorization': f'Bearer {token}'}
