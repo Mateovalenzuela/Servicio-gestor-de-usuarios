@@ -19,14 +19,9 @@ jobs:
         VERIFYING_KEY_NAME_FILE: ${{ secrets.VERIFYING_KEY_NAME_FILE }}
         ALGORITHM: ${{ secrets.ALGORITHM }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        EMAIL_RECEIVER_TEST: ${{ secrets.EMAIL_RECEIVER_TEST }}
-        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+        ENTORNO: ${{ secrets.ENTORNO }}
         DB_ENGINE: ${{ vars.DB_ENGINE }}
         DB_NAME: ${{ vars.DB_NAME }}
-        EMAIL_HOST: ${{ vars.EMAIL_HOST }}
-        EMAIL_PORT: ${{ vars.EMAIL_PORT }}
-        EMAIL_USE_SSL: ${{ vars.EMAIL_USE_SSL }}
 
     steps:
     - uses: actions/checkout@v3
