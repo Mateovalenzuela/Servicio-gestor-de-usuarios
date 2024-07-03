@@ -97,7 +97,7 @@ class TestPerfilService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
 
         """
         Caso de fallo: Añadir un perfil a un usuario que ya tiene un perfil
@@ -112,7 +112,7 @@ class TestPerfilService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 400)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
 
         """
         Caso de fallo: Añadir un perfil con datos inválidos
@@ -205,7 +205,7 @@ class TestPerfilService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
 
         user = self.get_user(id)
         self.assertEqual(user.perfil.nombre, self.valid_perfil_data2['nombre'])

@@ -328,7 +328,7 @@ class TestUsuarioService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
         user = self.get_user(id)
         self.assertTrue(user.check_password(password))
 
@@ -420,7 +420,7 @@ class TestUsuarioService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
         user = self.get_user(id)
         self.assertEqual(email, user.email)
 
@@ -513,7 +513,7 @@ class TestUsuarioService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
         self.assertEqual(nuevo_username_valido, self.get_user(id).username)
 
         """
@@ -581,7 +581,7 @@ class TestUsuarioService(TestCase):
         status = response.status_code
         data = response.data.get('data', response.data.get('detail'))
         self.assertEqual(status, 200)
-        self.assertIn('message', data)
+        self.assertIn('message', response.data)
         with self.assertRaises(Exception):
             self.get_user(id)
 

@@ -75,10 +75,10 @@ class UsuarioService:
             usuario_serializer = self._serializer_class(data=usuario_data)
             if usuario_serializer.is_valid():
                 usuario_serializer.save()
-                message = {'message': 'Usuario creado'}
-                return SuccessResponse.created(data=message)
+                message = 'Usuario creado'
+                return SuccessResponse.created(message=message, data=usuario_serializer.validated_data)
             else:
-                return ErrorResponse.bad_request(usuario_serializer.errors)
+                return ErrorResponse.bad_request(message='Datos inválidos', errors=usuario_serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()
@@ -101,10 +101,10 @@ class UsuarioService:
 
                 user.set_password(password_serializer.validated_data['password'])
                 user.save()
-                message = {'message': 'Contraseña Actualizada'}
-                return SuccessResponse.ok(data=message)
+                message = 'Contraseña Actualizada'
+                return SuccessResponse.ok(message=message)
             else:
-                return ErrorResponse.bad_request(password_serializer.errors)
+                return ErrorResponse.bad_request(message='Datos invalidos', errors=password_serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()
@@ -135,11 +135,11 @@ class UsuarioService:
                 # la contraseña es correcta
                 user.email = serializer.validated_data['email']
                 user.save()
-                message = {'message': 'Email Actualizado'}
-                return SuccessResponse.ok(data=message)
+                message = 'Email Actualizado'
+                return SuccessResponse.ok(message=message, data=serializer.validated_data['email'])
             else:
                 # datos invalidos
-                return ErrorResponse.bad_request(serializer.errors)
+                return ErrorResponse.bad_request(message='Datos inválidos', errors=serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()
@@ -152,18 +152,18 @@ class UsuarioService:
             data = {"username": username}
 
             # valida los datos
-            serializer_data = self._serializer_class(data=data, partial=True)
-            if not serializer_data.is_valid():
-                return ErrorResponse.bad_request(serializer_data.errors)
+            serializer = self._serializer_class(data=data, partial=True)
+            if not serializer.is_valid():
+                return ErrorResponse.bad_request(message='Datos inválidos', errors=serializer.errors)
 
             user = self._get_object(id)
             if user is None:
                 return ErrorResponse.user_not_found()
 
-            user.username = serializer_data.validated_data['username']
+            user.username = serializer.validated_data['username']
             user.save()
-            message = {'message': 'Username Actualizado'}
-            return SuccessResponse.ok(data=message)
+            message = 'Username Actualizado'
+            return SuccessResponse.ok(message=message, data=serializer.validated_data)
 
         except Exception as e:
             return ErrorResponse.server_error()
@@ -175,8 +175,8 @@ class UsuarioService:
 
             updated_rows = self._model.objects.filter(id=id, is_active=True, is_superuser=False).update(is_active=False)
             if updated_rows == 1:
-                message = {'message': 'Usuario eliminado'}
-                return SuccessResponse.ok(data=message)
+                message = 'Usuario eliminado'
+                return SuccessResponse.ok(message=message)
             return ErrorResponse.user_not_found()
         except Exception as e:
             return ErrorResponse.server_error()

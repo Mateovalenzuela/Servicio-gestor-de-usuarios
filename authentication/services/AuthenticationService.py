@@ -44,7 +44,7 @@ class AuthenticationService:
             if user:
                 # actualiza el token de refresh y lo manda a la lista negra
                 RefreshToken.for_user(user)
-                return SuccessResponse.ok('Sesion cerrada correctamente')
+                return SuccessResponse.ok(message='Sesion cerrada correctamente')
 
             return ErrorResponse.user_not_found()
 

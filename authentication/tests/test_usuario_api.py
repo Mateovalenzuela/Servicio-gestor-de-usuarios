@@ -6,8 +6,8 @@ from ..serializers import UsuarioSerializer
 class TestUsuarioAPI(TestCase):
     def setUp(self):
         self.client = Client()
-        self.url_api_usuario = '/api/usuario/'
-        self.url_api_login = '/api/login/'
+        self.url_api_usuario = '/usuario/api/'
+        self.url_api_login = '/authentication/api/login/'
         self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
@@ -225,7 +225,7 @@ class TestUsuarioAPI(TestCase):
         id = usuario.id
 
         data = {'username': 'nombre_de_usuario'}
-        response = self.client.patch(
+        response = self.client.post(
             path=f'{self.url_api_usuario}{id}/update_username/',
             headers=headers,
             data=data,
@@ -242,7 +242,7 @@ class TestUsuarioAPI(TestCase):
         """
 
         data = {'username': 'nombre-de-usuario-invalido#$@'}
-        response = self.client.patch(
+        response = self.client.post(
             path=f'{self.url_api_usuario}{id}/update_username/',
             headers=headers,
             data=data,
@@ -254,7 +254,7 @@ class TestUsuarioAPI(TestCase):
         Caso de Fallo: se intenta modificar el username de un usuario sin enviar el token.
         """
         data = {'username': 'nombre188'}
-        response = self.client.patch(
+        response = self.client.post(
             path=f'{self.url_api_usuario}{id}/update_username/',
             data=data,
             content_type='application/json'

@@ -15,14 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UsuarioViewSet, ProtectedView
+from rest_framework_simplejwt.views import TokenVerifyView, TokenRefreshView
+from .views import Login, Logout, ProtectedView
 
-router = DefaultRouter()
-router.register('', UsuarioViewSet, basename='usuarios')
-
-router_urls = router.urls
 
 urlpatterns = [
-     path('', include(router_urls), name='crud-usuario')
+     path('login/', Login.as_view(), name='login'),
+     path('logout/', Logout.as_view(), name='logout'),
+     path('protected/', ProtectedView.as_view(), name='protected'),
+     path('verificar_token/', TokenVerifyView.as_view(), name='verificar_token'),
+     path('refresh_token/', TokenRefreshView.as_view(), name='refresh_token'),
 ]

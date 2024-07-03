@@ -2,4 +2,5 @@
 *.env
 *.pem
 /db.sqlite3
-/authentication/temp
+/authentication/migrations
+/gastos

@@ -47,13 +47,13 @@ class PerfilService:
 
                 # Verificar si ya existe un perfil para el usuario
                 if hasattr(usuario, 'perfil'):
-                    error = {'message': 'Ya existe un perfil para este usuario.'}
-                    return ErrorResponse.bad_request(errors=error)
+                    message = 'Ya existe un perfil para este usuario.'
+                    return ErrorResponse.bad_request(message=message)
 
                 serializer.save(usuario=usuario)
-                message = {'message': 'Perfil Agregado a usuario'}
-                return SuccessResponse.ok(data=message)
-            return ErrorResponse.bad_request(errors=serializer.errors)
+                message = 'Perfil Agregado a usuario'
+                return SuccessResponse.ok(message=message, data=serializer.validated_data)
+            return ErrorResponse.bad_request(message='Datos inválidos', errors=serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()
@@ -70,9 +70,9 @@ class PerfilService:
             }
 
             # serializa los datos del perfil
-            serializer_data = self._serializer_class(data=data_perfil)
+            serializer = self._serializer_class(data=data_perfil)
 
-            if serializer_data.is_valid():
+            if serializer.is_valid():
 
                 usuario_controller = UsuarioService()
                 usuario = usuario_controller.get_object_user(user_id)
@@ -83,15 +83,15 @@ class PerfilService:
                 if not hasattr(usuario, 'perfil'):
                     return ErrorResponse.perfil_not_found()
 
-                usuario.perfil.nombre = serializer_data.validated_data['nombre']
-                usuario.perfil.apellido = serializer_data.validated_data['apellido']
-                usuario.perfil.fecha_nacimiento = serializer_data.validated_data['fecha_nacimiento']
+                usuario.perfil.nombre = serializer.validated_data['nombre']
+                usuario.perfil.apellido = serializer.validated_data['apellido']
+                usuario.perfil.fecha_nacimiento = serializer.validated_data['fecha_nacimiento']
                 usuario.perfil.save()
 
-                message = {'message': 'Perfil actualizado'}
-                return SuccessResponse.ok(data=message)
+                message = 'Perfil actualizado'
+                return SuccessResponse.ok(message=message, data=serializer.validated_data)
 
-            return ErrorResponse.bad_request(errors=serializer_data.errors)
+            return ErrorResponse.bad_request(message='Datos inválidos', errors=serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()

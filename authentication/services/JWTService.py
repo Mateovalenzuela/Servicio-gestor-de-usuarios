@@ -42,10 +42,10 @@ class JWTService:
                 access_token = serializer.validated_data.get('access')
                 refresh_token = serializer.validated_data.get('refresh')
                 return SuccessResponse.ok(
-                    {'access_token': access_token, 'refresh_token': refresh_token}
+                    data={'access_token': access_token, 'refresh_token': refresh_token}, message='Token creado'
                 )
             else:
-                return ErrorResponse.bad_request(serializer.errors)
+                return ErrorResponse.bad_request(message='Token error', errors=serializer.errors)
 
         except Exception as e:
             return ErrorResponse.server_error()

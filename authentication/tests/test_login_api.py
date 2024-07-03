@@ -8,9 +8,9 @@ class TestLoginAPI(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.url_api_usuario = '/api/usuario/'
-        self.url_api_login = '/api/login/'
-        self.url_api_logout = '/api/logout/'
+        self.url_api_usuario = '/usuario/api/'
+        self.url_api_login = '/authentication/api/login/'
+        self.url_api_logout = '/authentication/api/logout/'
         self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
@@ -87,7 +87,7 @@ class TestLoginAPI(TestCase):
         data = dict(self.logged_user.json())['data']
         token = data['access_token']
         response = self.client.get(
-            path=f'/vista/',
+            path=f'/authentication/api/protected/',
             headers={'Authorization': f'Bearer {token}'}
         )
         self.assertEquals(response.status_code, 200)

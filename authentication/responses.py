@@ -4,12 +4,12 @@ from rest_framework import status
 
 class SuccessResponse:
     @staticmethod
-    def ok(data=None):
-        return Response({'status': 'success', 'data': data}, status=status.HTTP_200_OK)
+    def ok(data=None, message=None):
+        return Response({'status': 'success', 'data': data, 'message': message}, status=status.HTTP_200_OK)
 
     @staticmethod
-    def created(data=None):
-        return Response({'status': 'success', 'data': data}, status=status.HTTP_201_CREATED)
+    def created(data=None, message=None):
+        return Response({'status': 'success', 'data': data, 'message': message}, status=status.HTTP_201_CREATED)
 
     @staticmethod
     def no_content():
@@ -18,8 +18,8 @@ class SuccessResponse:
 
 class ErrorResponse:
     @staticmethod
-    def bad_request(errors=None):
-        return Response({'status': 'error', 'detail': errors}, status=status.HTTP_400_BAD_REQUEST)
+    def bad_request(errors=None, message=None):
+        return Response({'status': 'error', 'detail': errors, 'message': message}, status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def credentials_not_found():

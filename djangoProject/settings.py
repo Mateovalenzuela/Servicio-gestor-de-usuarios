@@ -51,12 +51,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_yasg',
-    'naomi',
     'authentication'
 ]
 
@@ -164,3 +162,5 @@ STATIC_URL = 'static/'
 # ]
 
 # STATIC_ROOT = "staticfiles"
+
+HOST_GASTOS_SERVICE = os.getenv('HOST_GASTOS_SERVICE', '')

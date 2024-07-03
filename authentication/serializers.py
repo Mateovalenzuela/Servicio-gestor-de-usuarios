@@ -3,7 +3,6 @@ from datetime import timezone, datetime
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Usuario, Perfil
-from PIL import Image
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -71,6 +70,28 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
 
+class UpdateUsernameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Usuario
+        fields = ('username', 'password')
+
+    def validate_username(self, value):
+        min_length = 4
+        if len(value) < min_length:
+            raise serializers.ValidationError(f"El username debe tener por lo menos {min_length} caracteres")
+
+        if not re.match("^[a-zA-Z0-9._]*$", value):
+            raise serializers.ValidationError(f"El username puede contener letras, números, '._'")
+
+        # # Verifica si ya existe un usuario con el mismo nombre de usuario
+        # existing_user = Usuario.objects.filter(username=value).exclude(pk=self.instance.pk).first()
+        # if existing_user:
+        #     raise serializers.ValidationError('Este nombre de usuario ya está en uso.')
+
+        return value
+
+
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(
         min_length=8,
@@ -127,15 +148,6 @@ class PerfilSerializer(serializers.ModelSerializer):
         # Verificar si la fecha de nacimiento es mayor que la fecha actual
         if value > datetime.now().date():
             raise serializers.ValidationError("La fecha de nacimiento no puede ser mayor que la fecha actual.")
-
-        return value
-
-    def validate_imagen(self, value):
-        try:
-            img = Image.open(value)
-            img.verify()
-        except Exception as e:
-            raise serializers.ValidationError("Imagen no válida.")
 
         return value
 
