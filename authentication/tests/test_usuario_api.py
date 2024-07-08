@@ -7,7 +7,7 @@ class TestUsuarioAPI(TestCase):
     def setUp(self):
         self.client = Client()
         self.url_api_usuario = '/usuario/api/'
-        self.url_api_login = '/authentication/api/login/'
+        self.url_api_login = '/authentication/api/token/'
         self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
@@ -55,8 +55,8 @@ class TestUsuarioAPI(TestCase):
             path=self.url_api_login,
             data=data
         )
-        data = dict(response.json())['data']
-        token = data['access_token']
+        data = dict(response.json())
+        token = data['access']
         return token
 
     def _get_usuario_by_username(self, username):

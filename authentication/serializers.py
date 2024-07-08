@@ -1,7 +1,9 @@
 import re
 from datetime import timezone, datetime
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, AuthUser
+from rest_framework_simplejwt.tokens import Token
+
 from .models import Usuario, Perfil
 
 
@@ -164,4 +166,10 @@ class ConfirmarEmailSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    pass
+    @classmethod
+    def get_token(cls, user: AuthUser) -> Token:
+        token = super().get_token(user)
+
+        token['username'] = user.username
+
+        return token

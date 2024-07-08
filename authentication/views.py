@@ -8,8 +8,6 @@ from drf_yasg.utils import swagger_auto_schema
 from .mixins import LoginAndIsOwnerMixin, AllowAny, IsAuthenticated
 from .services.UsuarioService import UsuarioService
 from .services.PerfilService import PerfilService
-from .services.AuthenticationService import AuthenticationService
-from .services.JWTService import JWTService
 from .serializers import *
 
 
@@ -203,35 +201,8 @@ class UsuarioViewSet(GenericViewSet, LoginAndIsOwnerMixin):
         return response
 
 
-class Login(TokenObtainPairView):
-    permission_classes = [AllowAny]
-
-    @swagger_auto_schema(request_body=CustomTokenObtainPairSerializer, responses={200: CustomTokenObtainPairSerializer(), 400: CustomTokenObtainPairSerializer()})
-    def post(self, request, *args, **kwargs):
-
-        password = request.data.get('password', None)
-        email = request.data.get('email', None)
-
-        service = AuthenticationService()
-        response = service.login(
-            email=email,
-            password=password
-        )
-        return response
-
-
-class Logout(GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(responses={200: 'message'})
-    def post(self, request, *args, **kwargs):
-
-        id = request.user.id or 0
-
-        service = AuthenticationService()
-        response = service.logout(user_id=id)
-
-        return response
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class ProtectedView(GenericAPIView):

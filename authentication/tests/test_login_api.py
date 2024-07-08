@@ -9,8 +9,8 @@ class TestLoginAPI(TestCase):
     def setUp(self):
         self.client = Client()
         self.url_api_usuario = '/usuario/api/'
-        self.url_api_login = '/authentication/api/login/'
-        self.url_api_logout = '/authentication/api/logout/'
+        self.url_api_login = '/authentication/api/token/'
+        self.url_api_logout = '/authentication/api/token/refresh/'
         self.model_usuario = Usuario
 
         self.user = self.model_usuario.objects.create_user(
@@ -66,11 +66,13 @@ class TestLoginAPI(TestCase):
         self.assertTrue(self.client.login(username=self.valid_user['email'], password=self.valid_user['password']))
 
     def test_api_logout(self):
-        data = dict(self.logged_user.json())['data']
-        token = data['access_token']
+        data = dict(self.logged_user.json())
+        token = data['access']
+        refresh_token = data['refresh']
 
         response = self.client.post(
             path=self.url_api_logout,
+            data={'refresh': refresh_token},
             headers={'Authorization': f'Bearer {token}'}
         )
         self.assertEquals(response.status_code, 200)
@@ -81,11 +83,11 @@ class TestLoginAPI(TestCase):
             path=self.url_api_logout,
             headers={'Authorization': f'Bearer {token}'}
         )
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 400)
 
     def test_api_protected_view(self):
-        data = dict(self.logged_user.json())['data']
-        token = data['access_token']
+        data = dict(self.logged_user.json())
+        token = data['access']
         response = self.client.get(
             path=f'/authentication/api/protected/',
             headers={'Authorization': f'Bearer {token}'}
