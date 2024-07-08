@@ -97,11 +97,22 @@ WSGI_APPLICATION = 'djangoProject.wsgi.application'
 
 ENTORNO = os.getenv('ENTORNO')
 
-if ENTORNO == 'github_actions':
+if ENTORNO in ['github_actions', 'test']:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'db.sqlite3'
+        }
+    }
+elif ENTORNO == 'docker':
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+            'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DOCKER_DB_HOST', ''),
+            'PORT': os.getenv('DOCKER_DB_PORT', ''),
         }
     }
 else:
